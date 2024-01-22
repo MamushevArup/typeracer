@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/config"
-	"github.com/MamushevArup/typeracer/internal/repository/postgres"
+	"github.com/MamushevArup/typeracer/internal/repository"
+	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/MamushevArup/typeracer/pkg/psql"
+	"github.com/google/uuid"
 	"log"
 )
 
@@ -58,14 +61,19 @@ func main() {
 		log.Fatalf("error with reading config %e", err)
 	}
 	// postgres://username:password@localhost:5432/database_name
-	pg := cfg.Postgres
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", pg.User, pg.Password, pg.Host, pg.Port, pg.Database)
+
 	// Init logger
 	lg := logger.NewLogger()
-	fmt.Println(dbUrl)
 	// Init DBClient
-	dbConn := psql.NewDBConnector(lg, dbUrl)
+	db := psql.NewDBConnector(cfg)
 	// Init repository  TODO change the logic here
-	dbConn.DBConnector()
-	postgres.NewRepository(lg, dbConn)
+	repo := repository.NewRepo(lg, db)
+	svc := services.NewService(repo)
+	uid := "11111111-1111-1111-1111-111111111111"
+	uidd, _ := uuid.Parse(uid)
+	_, err = repo.Starter.StartSingle(context.Background(), uidd)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
