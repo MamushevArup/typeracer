@@ -1,15 +1,15 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"github.com/MamushevArup/typeracer/internal/config"
+	"github.com/MamushevArup/typeracer/internal/handlers"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/MamushevArup/typeracer/pkg/psql"
-	"github.com/google/uuid"
 	"log"
+	"net/http"
+	"os"
 )
 
 /*
@@ -52,6 +52,8 @@ import (
 
 	Avatar model's page
 	1) Avatar models
+
+	In the type race 1 stands for the practice yourself and 0 for racetrack multiple connection
 */
 
 func main() {
@@ -69,11 +71,10 @@ func main() {
 	// Init repository  TODO change the logic here
 	repo := repository.NewRepo(lg, db)
 	svc := services.NewService(repo)
-	uid := "11111111-1111-1111-1111-111111111111"
-	uidd, _ := uuid.Parse(uid)
-	_, err = repo.Starter.StartSingle(context.Background(), uidd)
-	if err != nil {
-		fmt.Println(err)
-		return
+	handler := handlers.NewHandler(svc)
+
+	if err = http.ListenAndServe(":1000", handler.InitRoutes()); err != nil {
+		lg.Errorf("unable to create a connection %v", err)
+		os.Exit(1)
 	}
 }

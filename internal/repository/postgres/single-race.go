@@ -12,6 +12,8 @@ import (
 
 type Starter interface {
 	StartSingle(ctx context.Context, id uuid.UUID) (*models.Single, error)
+	EndSingleRace(ctx context.Context, req models.RespEndSingle) error
+	GetTextLen(ctx context.Context) (int, error)
 }
 
 // This is responsible for the practice yourself section
@@ -28,8 +30,14 @@ func NewSingle(lg *logger.Logger, db *pgxpool.Pool) Starter {
 	}
 }
 
+type ids struct {
+	raceId uuid.UUID
+	textId uuid.UUID
+}
+
+var identifiers ids
+
 func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Single, error) {
-	// TODO implement me
 	// Need to work with practice yourself section
 	// Modify text insert single update user
 	// prepare data to insert and then fetch the data from the database.
@@ -51,7 +59,9 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 	}
 	// fetch data from random_text table and return one random
 	textUUID := r.randomText(ctx)
-
+	single.TextID = *textUUID
+	identifiers.textId = *textUUID
+	identifiers.raceId = newRaceID
 	// fetch data from racer table and place it in single
 	racer := "SELECT username, avatar FROM racer WHERE id = $1"
 	err = pgxscan.Get(ctx, r.db, &single, racer, userID)
@@ -100,4 +110,53 @@ func (r *repo) randomText(ctx context.Context) *uuid.UUID {
 		uuids = append(uuids, id)
 	}
 	return &uuids[0]
+}
+
+func (r *repo) EndSingleRace(ctx context.Context, resp models.RespEndSingle) error {
+	begin, err := r.db.Begin(ctx)
+	if err != nil {
+		r.lg.Errorf("unable to start transaction %v", err)
+		return err
+	}
+	sgl := fmt.Sprintf("INSERT INTO single values ($1, $2, $3, $4, $5, $6, $7);")
+	_, err = r.db.Exec(ctx, sgl, identifiers.raceId, resp.Wpm, resp.Duration, resp.Accuracy, resp.StartedTime, resp.RacerId, identifiers.textId)
+	if err != nil {
+		r.lg.Errorf("error with inserting into single transaction failed %v", err)
+		return err
+	}
+	raceH := fmt.Sprintf("INSERT INTO race_history VALUES ($1, $2, $3, $4);")
+	_, err = r.db.Exec(ctx, raceH, identifiers.raceId, resp.RacerId, identifiers.textId, 1)
+	if err != nil {
+		r.lg.Errorf("error with inserting into race_history %v", err)
+		return err
+	}
+
+	if err = begin.Commit(ctx); err != nil {
+		if err = begin.Rollback(ctx); err != nil {
+			r.lg.Errorf("unable to rollback %v", err)
+			return err
+		}
+		r.lg.Errorf("unable to commit %v", err)
+		return err
+	}
+	return nil
+}
+
+func (r *repo) GetTextLen(ctx context.Context) (int, error) {
+	var length int
+	query := "SELECT length FROM text where id=$1"
+	err := r.db.QueryRow(ctx, query, identifiers.textId).Scan(&length)
+	if err != nil {
+		r.lg.Errorf("can't fetch length from text %v", err)
+		return 0, err
+	}
+	return length, nil
+}
+
+func errors(r *repo, err error, msg string) error {
+	if err != nil {
+		r.lg.Errorf("%v : %v", msg, err)
+		return err
+	}
+	return nil
 }
