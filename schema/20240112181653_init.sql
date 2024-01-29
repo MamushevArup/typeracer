@@ -47,8 +47,7 @@ create table race_history(
      single_id uuid references single(id),
      racer_id uuid references racer(id),
      text_id uuid references text(id),
-     race_type int not null,
-     primary key (racer_id, text_id)
+     primary key (racer_id, single_id)
 );
 
 create table random_text(

@@ -1,4 +1,4 @@
-package postgres
+package single
 
 import (
 	"context"
@@ -12,8 +12,9 @@ import (
 
 type Starter interface {
 	StartSingle(ctx context.Context, id uuid.UUID) (*models.Single, error)
-	EndSingleRace(ctx context.Context, req models.RespEndSingle) error
+	EndSingleRace(ctx context.Context, req *models.RespEndSingle) error
 	GetTextLen(ctx context.Context) (int, error)
+	RacerExist(ctx context.Context, id uuid.UUID) (bool, error)
 }
 
 // This is responsible for the practice yourself section
@@ -42,7 +43,7 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 	// Modify text insert single update user
 	// prepare data to insert and then fetch the data from the database.
 	//create new single race id
-	var single models.Single
+	single := new(models.Single)
 	newRaceID, err := uuid.NewUUID()
 	if err != nil {
 		r.lg.Errorf("can't create uuid for single race %v\n", err)
@@ -59,12 +60,12 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 	}
 	// fetch data from random_text table and return one random
 	textUUID := r.randomText(ctx)
-	single.TextID = *textUUID
-	identifiers.textId = *textUUID
+	single.TextID = textUUID
+	identifiers.textId = textUUID
 	identifiers.raceId = newRaceID
 	// fetch data from racer table and place it in single
 	racer := "SELECT username, avatar FROM racer WHERE id = $1"
-	err = pgxscan.Get(ctx, r.db, &single, racer, userID)
+	err = pgxscan.Get(ctx, begin, single, racer, userID)
 	if err != nil {
 		r.lg.Errorf("can't scan racer data %v", err)
 		return nil, err
@@ -73,13 +74,11 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 	// fetch data from text and contributor table and place it in single
 	text := fmt.Sprintf("SELECT content, length, contributor FROM text JOIN " +
 		"contributor on text.contributor_id=contributor.user_id where text.id=$1 and contributor_id=$2")
-	err = pgxscan.Get(ctx, r.db, &single, text, textUUID, userID)
+	err = pgxscan.Get(ctx, begin, single, text, textUUID, userID)
 	if err != nil {
 		r.lg.Errorf("can't scan text data %v", err)
 		return nil, err
 	}
-
-	fmt.Println(single)
 
 	err = begin.Commit(ctx)
 	if err != nil {
@@ -91,16 +90,16 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 		r.lg.Errorf("can't commit a transaction %v", err)
 		return nil, err
 	}
-	return &single, nil
+	return single, nil
 }
 
-func (r *repo) randomText(ctx context.Context) *uuid.UUID {
+func (r *repo) randomText(ctx context.Context) uuid.UUID {
 	var uuids []uuid.UUID
 	getRandom := fmt.Sprintf("SELECT * FROM random_text")
 	txUUIDS, err := r.db.Query(ctx, getRandom)
 	if err != nil {
 		r.lg.Errorf("can't exec query random uuids %v", err)
-		return nil
+		return [16]byte{}
 	}
 	for txUUIDS.Next() {
 		var id uuid.UUID
@@ -109,23 +108,23 @@ func (r *repo) randomText(ctx context.Context) *uuid.UUID {
 		}
 		uuids = append(uuids, id)
 	}
-	return &uuids[0]
+	return uuids[0]
 }
 
-func (r *repo) EndSingleRace(ctx context.Context, resp models.RespEndSingle) error {
+func (r *repo) EndSingleRace(ctx context.Context, resp *models.RespEndSingle) error {
 	begin, err := r.db.Begin(ctx)
 	if err != nil {
 		r.lg.Errorf("unable to start transaction %v", err)
 		return err
 	}
 	sgl := fmt.Sprintf("INSERT INTO single values ($1, $2, $3, $4, $5, $6, $7);")
-	_, err = r.db.Exec(ctx, sgl, identifiers.raceId, resp.Wpm, resp.Duration, resp.Accuracy, resp.StartedTime, resp.RacerId, identifiers.textId)
+	_, err = begin.Exec(ctx, sgl, identifiers.raceId, resp.Wpm, resp.Duration, resp.Accuracy, resp.StartedTime, resp.RacerId, identifiers.textId)
 	if err != nil {
 		r.lg.Errorf("error with inserting into single transaction failed %v", err)
 		return err
 	}
 	raceH := fmt.Sprintf("INSERT INTO race_history VALUES ($1, $2, $3, $4);")
-	_, err = r.db.Exec(ctx, raceH, identifiers.raceId, resp.RacerId, identifiers.textId, 1)
+	_, err = begin.Exec(ctx, raceH, identifiers.raceId, resp.RacerId, identifiers.textId, 1)
 	if err != nil {
 		r.lg.Errorf("error with inserting into race_history %v", err)
 		return err
@@ -153,10 +152,13 @@ func (r *repo) GetTextLen(ctx context.Context) (int, error) {
 	return length, nil
 }
 
-func errors(r *repo, err error, msg string) error {
+func (r *repo) RacerExist(ctx context.Context, id uuid.UUID) (bool, error) {
+	var ex bool
+	query := "SELECT EXISTS(SELECT 1 FROM racer WHERE id = $1)"
+	err := r.db.QueryRow(ctx, query, id).Scan(&ex)
 	if err != nil {
-		r.lg.Errorf("%v : %v", msg, err)
-		return err
+		r.lg.Errorf("can't execute use exist check %v", err)
+		return false, err
 	}
-	return nil
+	return ex, nil
 }

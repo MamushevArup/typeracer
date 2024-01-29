@@ -21,6 +21,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 	{
 		sgl.POST("/race", h.startRace)
 		sgl.POST("/end-race", h.endRace)
+		sgl.POST("/curr-wpm", h.currWPM)
 	}
 
 	return router

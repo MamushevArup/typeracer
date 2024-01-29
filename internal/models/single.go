@@ -14,9 +14,8 @@ type Single struct {
 	TextLen         int       `json:"text_len" db:"length"`
 	TextAuthor      string    `json:"text_author" db:"author"`
 	ContributorName string    `json:"contributor_name" db:"contributor"`
-
-	RacerName string `json:"racer_name" db:"username"`
-	Avatar    string `json:"avatar" db:"avatar"`
+	RacerName       string    `json:"racer_name" db:"username"`
+	Avatar          string    `json:"avatar" db:"avatar"`
 }
 
 type RespEndSingle struct {
@@ -28,7 +27,7 @@ type RespEndSingle struct {
 }
 
 type ReqEndSingle struct {
-	RacerID  uuid.UUID `json:"racer_id"`
+	RacerID  uuid.UUID `json:"-"`
 	Duration int       `json:"duration"`
 	Errors   int       `json:"errors"`
 }
