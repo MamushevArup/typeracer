@@ -22,7 +22,6 @@ type Postgres struct {
 	Host     string `yaml:"host"`
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
-	Password string `yaml:"password"`
 	URL      string `yaml:"url"`
 }
 

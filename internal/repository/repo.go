@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/MamushevArup/typeracer/internal/repository/postgres/authr"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/contributor"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/single"
 	"github.com/MamushevArup/typeracer/pkg/logger"
@@ -10,11 +11,13 @@ import (
 type Repo struct {
 	Starter     single.Starter
 	Contributor contributor.Contributor
+	Auth        authr.Auth
 }
 
 func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
 	return &Repo{
 		Starter:     single.NewSingle(lg, db),
 		Contributor: contributor.NewContributor(lg, db),
+		Auth:        authr.NewUser(db, lg),
 	}
 }

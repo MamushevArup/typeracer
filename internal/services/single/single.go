@@ -42,7 +42,11 @@ var (
 
 func (s *service) StartRace(ctx context.Context, userId uuid.UUID) (*models.Single, error) {
 	//TODO implement me
-	single, err := s.repo.Starter.StartSingle(ctx, userId)
+	newRaceID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	single, err := s.repo.Starter.StartSingle(ctx, userId, newRaceID)
 	if err != nil {
 		return nil, startRace
 	}

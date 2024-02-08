@@ -1,14 +1,11 @@
 http_server:
-  port: 8080
+  port: 1000
   host: localhost
   timeout: 4s
   idle_timeout: 60s
 postgres:
-  port: 5431
-  host: localhost
+  port: 5432
+  host: db2
   database: typeracer
   user: postgres
-  password: Cicada_3301
-  url: postgres://postgres:Cicada_3301@localhost:5431/typeracer
-
-
+  url: postgres://postgres:Cicada_3301@localhost:5432/typeracer

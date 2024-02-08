@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  racer:
+    image: your-racer-image:tag
+    container_name: racer
+    build:
+      context: .
+      dockerfile: dockerfile/Dockerfile
+    ports:
+      - "1000:1000"
+    environment:
+      - JWT_SECRET_KEY=swift_is_shit
+      - POSTGRES_PASSWORD=Cicada_3301
+    networks:
+      - blur
+    restart: unless-stopped
+
+  db2:
+    image: postgres
+    container_name: db2
+    ports:
+      - "5439:5432"
+    environment:
+      - POSTGRES_PASSWORD='Cicada_3301'
+      - POSTGRES_DB=typeracer
+    networks:
+      - blur
+    volumes:
+      - psql:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  blur:
+    driver: bridge
+
+volumes:
+  psql:

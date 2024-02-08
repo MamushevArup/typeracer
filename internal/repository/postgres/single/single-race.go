@@ -2,16 +2,18 @@ package single
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"math/big"
 )
 
 type Starter interface {
-	StartSingle(ctx context.Context, id uuid.UUID) (*models.Single, error)
+	StartSingle(ctx context.Context, id, racerID uuid.UUID) (*models.Single, error)
 	EndSingleRace(ctx context.Context, req *models.RespEndSingle) error
 	GetTextLen(ctx context.Context) (int, error)
 	RacerExist(ctx context.Context, id uuid.UUID) (bool, error)
@@ -38,18 +40,14 @@ type ids struct {
 
 var identifiers ids
 
-func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Single, error) {
+func (r *repo) StartSingle(ctx context.Context, userID, raceID uuid.UUID) (*models.Single, error) {
 	// Need to work with practice yourself section
 	// Modify text insert single update user
 	// prepare data to insert and then fetch the data from the database.
 	//create new single race id
 	single := new(models.Single)
-	newRaceID, err := uuid.NewUUID()
-	if err != nil {
-		r.lg.Errorf("can't create uuid for single race %v\n", err)
-		return nil, err
-	}
-	single.ID = newRaceID
+
+	single.ID = raceID
 	single.RacerID = userID
 	// using racer_id fetch the data related to the racer and
 	// with random uuid fetch the text.
@@ -62,7 +60,7 @@ func (r *repo) StartSingle(ctx context.Context, userID uuid.UUID) (*models.Singl
 	textUUID := r.randomText(ctx)
 	single.TextID = textUUID
 	identifiers.textId = textUUID
-	identifiers.raceId = newRaceID
+	identifiers.raceId = raceID
 	// fetch data from racer table and place it in single
 	racer := "SELECT username, avatar FROM racer WHERE id = $1"
 	err = pgxscan.Get(ctx, begin, single, racer, userID)
@@ -108,7 +106,16 @@ func (r *repo) randomText(ctx context.Context) uuid.UUID {
 		}
 		uuids = append(uuids, id)
 	}
-	return uuids[0]
+	randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(uuids))))
+	if err != nil {
+		// Handle error (e.g., log, panic, return a default value)
+		r.lg.Errorf("can't randomize due to %v", err)
+		return [16]byte{}
+
+	}
+
+	// Return the UUID at the randomly selected index
+	return uuids[randomIndex.Int64()]
 }
 
 func (r *repo) EndSingleRace(ctx context.Context, resp *models.RespEndSingle) error {

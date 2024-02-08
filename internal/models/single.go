@@ -31,10 +31,3 @@ type ReqEndSingle struct {
 	Duration int       `json:"duration"`
 	Errors   int       `json:"errors"`
 }
-
-// RaceHistory represents the race_history table in PostgreSQL.
-type RaceHistory struct {
-	SingleID uuid.UUID `json:"single_id" db:"single_id"`
-	RacerID  uuid.UUID `json:"racer_id" db:"racer_id"`
-	TextID   uuid.UUID `json:"text_id" db:"text_id"`
-}

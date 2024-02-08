@@ -6,15 +6,14 @@ import (
 	internal "github.com/MamushevArup/typeracer/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
+	"os"
 )
-
-//type PgPool struct {
-//	Pool *pgxpool.Pool
-//}
 
 func NewDBConnector(cfg *internal.Config) *pgxpool.Pool {
 	pg := cfg.Postgres
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", pg.User, pg.Password, pg.Host, pg.Port, pg.Database)
+	dbPasswd := os.Getenv("POSTGRES_PASSWORD")
+	fmt.Println(dbPasswd, "DATABSE PASSWORD HERRE")
+	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", pg.User, dbPasswd, pg.Host, pg.Port, pg.Database)
 	conn, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
 		log.Fatalf("unable to connect to database, config issue %v\n", err)

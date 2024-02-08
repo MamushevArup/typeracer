@@ -57,6 +57,11 @@ import (
 */
 
 func main() {
+	// Init .env reader
+	//if err := godotenv.Load(); err != nil {
+	//	log.Fatalf("can't read .env %v", err)
+	//}
+
 	// Init Config
 	cfg, err := internal.NewConfig()
 	if err != nil {
@@ -68,13 +73,15 @@ func main() {
 	lg := logger.NewLogger()
 	// Init DBClient
 	db := psql.NewDBConnector(cfg)
-	// Init repository  TODO change the logic here
+	// Init repository
 	repo := repository.NewRepo(lg, db)
+
 	svc := services.NewService(repo)
 	handler := handlers.NewHandler(svc)
 
-	if err = http.ListenAndServe(":1000", handler.InitRoutes()); err != nil {
+	if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
 		lg.Errorf("unable to create a connection %v", err)
 		os.Exit(1)
 	}
+
 }

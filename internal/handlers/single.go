@@ -49,8 +49,8 @@ func (h *handler) startRace(c *gin.Context) {
 		ID              uuid.UUID `json:"-" db:"id"`
 		RacerID         uuid.UUID `json:"racer_id"`
 		TextID          uuid.UUID `json:"-"`
-		Text            string    `json:"text" db:"content"`
-		TextLen         int       `json:"text_len" db:"length"`
+		Text            string    `json:"content" db:"content"`
+		TextLen         int       `json:"length" db:"length"`
 		TextAuthor      string    `json:"text_author" db:"author"`
 		ContributorName string    `json:"contributor_name" db:"contributor"`
 		RacerName       string    `json:"racer_name" db:"username"`
