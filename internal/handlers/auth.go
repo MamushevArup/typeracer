@@ -15,7 +15,36 @@ var (
 	mail          = errors.New("invalid email format")
 	emptyUsername = errors.New("username cannot be empty")
 	emailRegex    = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	maxAge        = int(time.Now().Add(60 * 24 * time.Hour).Unix())
 )
+
+func (h *handler) signIn(c *gin.Context) {
+	var sign struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.BindJSON(&sign); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
+	}
+
+	if err := emailAndPasswdValidation(sign.Email, sign.Password); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	access, refresh, err := h.service.Auth.SignIn(context.TODO(), sign.Email, sign.Password)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var t struct {
+		Access string `json:"access"`
+	}
+	t.Access = access
+	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
+	c.JSON(http.StatusCreated, &t)
+}
 
 func (h *handler) signUp(c *gin.Context) {
 	/*
@@ -35,9 +64,13 @@ func (h *handler) signUp(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 	}
 
-	err := emailAndPasswdValidation(r.Email, r.Password, r.Username)
+	err := emailAndPasswdValidation(r.Email, r.Password)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if r.Username == "" {
+		newErrorResponse(c, http.StatusBadRequest, emptyUsername.Error())
 		return
 	}
 	err = h.service.Auth.CheckUserSignUp(context.TODO(), r.Email, r.Password)
@@ -55,12 +88,11 @@ func (h *handler) signUp(c *gin.Context) {
 		Access string `json:"access_token"`
 	}
 	res.Access = access
-	maxAge := int(time.Now().Add(60 * 24 * time.Hour).Unix())
-	c.SetCookie("refresh_token", refresh, maxAge, "/", "localhost", false, true)
+	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
 	c.JSON(http.StatusCreated, &res)
 }
 
-func emailAndPasswdValidation(email, password, username string) error {
+func emailAndPasswdValidation(email, password string) error {
 	var (
 		minLen    = 6
 		maxLen    = 15
@@ -68,9 +100,6 @@ func emailAndPasswdValidation(email, password, username string) error {
 		hasChar   bool
 		hasSymbol bool
 	)
-	if username == "" {
-		return emptyUsername
-	}
 	if !regexp.MustCompile(emailRegex).MatchString(email) {
 		return mail
 	}

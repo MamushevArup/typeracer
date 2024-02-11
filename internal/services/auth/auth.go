@@ -15,9 +15,11 @@ import (
 )
 
 type Auth interface {
-	CheckUserSignIn(ctx context.Context, email, password string) error
+	SignIn(ctx context.Context, email, password string) (string, string, error)
 	SignUp(ctx context.Context, email, username, password string) (string, string, error)
 	CheckUserSignUp(ctx context.Context, email, password string) error
+	ValidateToken(tokenString string) (string, error)
+	RefreshToken(ctx context.Context, refresh, fingerprint string) (string, string, error)
 }
 
 type auth struct {
@@ -40,6 +42,74 @@ const (
 	refreshTokenCookieName = "refresh_token"
 	role                   = "racer"
 )
+
+func (a *auth) ValidateToken(tokenString string) (string, error) {
+	claim := &tokenClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claim, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+	})
+	if err != nil {
+		return "", err
+	}
+	if !token.Valid {
+		return "", jwt.ErrSignatureInvalid
+	}
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return "", jwt.ErrTokenInvalidClaims
+	}
+	if claim.ExpiresAt.Before(time.Now().UTC()) {
+		return "", jwt.ErrTokenExpired
+	}
+	return claims.Role, nil
+}
+
+func (a *auth) RefreshToken(ctx context.Context, refresh, fingerprint string) (string, string, error) {
+	// user_id, role, fingerprint
+	racer, err := a.repo.Auth.Fingerprint(ctx, fingerprint, refresh)
+	if err != nil {
+		return "", "", err
+	}
+	// here is the repo layer to remove from session
+	err = a.repo.Auth.DeleteSession(ctx, fingerprint, refresh)
+	if err != nil {
+		return "", "", errors.New("can't remove session " + err.Error())
+	}
+	// check the token expires or not
+	if err = parseRefreshToken(refresh); err != nil {
+		return "", "", err
+	}
+	// check the fingerprint are the same
+	if racer.Fingerprint != fingerprint {
+		return "", "", errors.New("fingerprint does not match ")
+	}
+	racer.LastLogin = time.Now()
+	racer.RefreshToken, err = a.generateRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
+	// or new refresh and store in the session
+	//update racer table refresh and fingerprint
+	if err = a.repo.Auth.InsertSession(ctx, racer); err != nil {
+		return "", "", err
+	}
+	// create access token and create refresh token and send back to the frontend
+	access, err := a.generateAccessToken(racer.ID.String(), racer.Role)
+	return access, racer.RefreshToken, nil
+}
+
+func parseRefreshToken(refresh string) error {
+	parsedToken, err := jwt.Parse(refresh, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+	})
+	if err != nil {
+		return err
+	}
+	if !parsedToken.Valid {
+		return jwt.ErrSignatureInvalid
+	}
+	return nil
+}
 
 func (a *auth) SignUp(ctx context.Context, email, username, password string) (string, string, error) {
 	// Sign up accept email, username, password after pass validation and check user existence if user doesn't exist
@@ -100,7 +170,7 @@ func (a *auth) generateAccessToken(id, role string) (string, error) {
 	if err != nil {
 		return "no token", err
 	}
-	return accessToken, nil
+	return "Bearer " + accessToken, nil
 }
 
 func (a *auth) generateRefreshToken() (string, error) {
@@ -138,21 +208,65 @@ func (a *auth) CheckUserSignUp(ctx context.Context, email, password string) erro
 	return nil
 }
 
-func (a *auth) CheckUserSignIn(ctx context.Context, email, password string) error {
+func (a *auth) SignIn(ctx context.Context, email, password string) (string, string, error) {
+	var r models.RacerAuth
 	password = strings.ToLower(password)
 	email = strings.ToLower(email)
 	bytePass := []byte(password)
 
+	byEmail, err := a.repo.Auth.UserByEmail(ctx, email)
+	if err != nil {
+		return "", "", err
+	}
+	if !byEmail {
+		return "", "", errors.New("user doesn't exist use sign up")
+	}
+
 	// here I need to make repo call to get password by
-	pswd, err := a.repo.Auth.GetUserPasswordByEmail(ctx, email)
+	id, token, pswd, err := a.repo.Auth.GetUserPasswordByEmail(ctx, email)
 	if err != nil {
 		log.Println(err)
-		return errors.New("user not found")
+		return "", "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(pswd), bytePass)
 	if err != nil {
-		return err
+		return "", "", err
 	}
-	return nil
+
+	isActive, err := a.repo.Auth.UserSession(ctx, token, id)
+	if err != nil {
+		return "", "", err
+	}
+	r.Fingerprint = "1245432134543"
+
+	if isActive {
+		err = a.repo.Auth.DeleteSession(ctx, r.Fingerprint, token)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	access, err := a.generateAccessToken(id.String(), role)
+	if err != nil {
+		return "", "", err
+	}
+
+	refresh, err := a.generateRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
+
+	r.ID = id
+	r.Role = role
+	r.Email = email
+	r.Password = pswd
+	r.RefreshToken = refresh
+	r.LastLogin = time.Now()
+	err = a.repo.Auth.InsertSession(ctx, r)
+	if err != nil {
+		return "", "", err
+	}
+
+	return access, refresh, nil
 }

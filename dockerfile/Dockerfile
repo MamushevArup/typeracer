@@ -16,7 +16,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /race/cmd/main/app cmd/main/app.go
 
 # Stage 2: Build the final image
-FROM alpine:latest
+FROM scratch
 
 WORKDIR /app
 
