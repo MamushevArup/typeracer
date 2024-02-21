@@ -18,6 +18,7 @@ type Auth interface {
 	InsertSession(ctx context.Context, r models.RacerAuth) error
 	UserSession(ctx context.Context, token string, id uuid.UUID) (bool, error)
 	Fingerprint(ctx context.Context, fng, refresh string) (models.RacerAuth, error)
+	DeleteRefreshSession(ctx context.Context, refresh string) error
 }
 
 type auth struct {
@@ -30,6 +31,17 @@ func NewUser(db *pgxpool.Pool, lg *logger.Logger) Auth {
 		db: db,
 		lg: lg,
 	}
+}
+
+func (a *auth) DeleteRefreshSession(ctx context.Context, refresh string) error {
+	query := `DELETE FROM session WHERE refresh_token = $1;`
+
+	_, err := a.db.Exec(ctx, query, refresh)
+	if err != nil {
+		a.lg.Errorf("can't delete from session %v", err)
+		return err
+	}
+	return nil
 }
 
 func (a *auth) InsertUser(ctx context.Context, racerAuth models.RacerAuth) error {
@@ -114,9 +126,9 @@ func (a *auth) InsertSession(ctx context.Context, r models.RacerAuth) error {
 // Fingerprint find fingerprint of the browser by refresh token and fingerprint
 func (a *auth) Fingerprint(ctx context.Context, fng, refresh string) (models.RacerAuth, error) {
 	var r models.RacerAuth
-	query := `SELECT user_id, role, fingerprint FROM session where fingerprint=$1 and refresh=$2`
+	query := `SELECT user_id, role, fingerprint FROM session where fingerprint=$1 and refresh_token=$2`
 	// inject fingerprint here
-	err := pgxscan.Select(ctx, a.db, &r, query, fng, refresh)
+	err := pgxscan.Get(ctx, a.db, &r, query, fng, refresh)
 	a.lg.Infof("error is %v", err)
 	return r, err
 }

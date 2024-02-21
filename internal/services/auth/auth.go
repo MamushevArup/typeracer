@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
@@ -15,11 +16,11 @@ import (
 )
 
 type Auth interface {
-	SignIn(ctx context.Context, email, password string) (string, string, error)
-	SignUp(ctx context.Context, email, username, password string) (string, string, error)
+	SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error)
+	SignUp(ctx context.Context, email, username, password, fingerprint string) (string, string, error)
 	CheckUserSignUp(ctx context.Context, email, password string) error
-	ValidateToken(tokenString string) (string, error)
 	RefreshToken(ctx context.Context, refresh, fingerprint string) (string, string, error)
+	Logout(ctx context.Context, refresh string) error
 }
 
 type auth struct {
@@ -43,25 +44,16 @@ const (
 	role                   = "racer"
 )
 
-func (a *auth) ValidateToken(tokenString string) (string, error) {
-	claim := &tokenClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claim, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
-	})
+func (a *auth) Logout(ctx context.Context, refresh string) error {
+	err := parseRefreshToken(refresh)
 	if err != nil {
-		return "", err
+		return err
 	}
-	if !token.Valid {
-		return "", jwt.ErrSignatureInvalid
+	err = a.repo.Auth.DeleteRefreshSession(ctx, refresh)
+	if err != nil {
+		return err
 	}
-	claims, ok := token.Claims.(*tokenClaims)
-	if !ok {
-		return "", jwt.ErrTokenInvalidClaims
-	}
-	if claim.ExpiresAt.Before(time.Now().UTC()) {
-		return "", jwt.ErrTokenExpired
-	}
-	return claims.Role, nil
+	return nil
 }
 
 func (a *auth) RefreshToken(ctx context.Context, refresh, fingerprint string) (string, string, error) {
@@ -111,7 +103,7 @@ func parseRefreshToken(refresh string) error {
 	return nil
 }
 
-func (a *auth) SignUp(ctx context.Context, email, username, password string) (string, string, error) {
+func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprint string) (string, string, error) {
 	// Sign up accept email, username, password after pass validation and check user existence if user doesn't exist
 	// we provide access/refresh token with role and id inside
 	// access token live 30 minute refresh token live 60 day
@@ -146,7 +138,7 @@ func (a *auth) SignUp(ctx context.Context, email, username, password string) (st
 	racer.Role = role
 	racer.CreatedAt = time.Now()
 	racer.LastLogin = time.Now()
-	racer.Fingerprint = "1234567890"
+	racer.Fingerprint = fingerprint
 
 	err = a.repo.Auth.InsertUser(ctx, racer)
 	if err != nil {
@@ -208,7 +200,7 @@ func (a *auth) CheckUserSignUp(ctx context.Context, email, password string) erro
 	return nil
 }
 
-func (a *auth) SignIn(ctx context.Context, email, password string) (string, string, error) {
+func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error) {
 	var r models.RacerAuth
 	password = strings.ToLower(password)
 	email = strings.ToLower(email)
@@ -235,6 +227,7 @@ func (a *auth) SignIn(ctx context.Context, email, password string) (string, stri
 	}
 
 	isActive, err := a.repo.Auth.UserSession(ctx, token, id)
+	fmt.Println(isActive, "ISACTIVE OR NOT DOES NOT KNOW THE SITUATION")
 	if err != nil {
 		return "", "", err
 	}
@@ -263,6 +256,7 @@ func (a *auth) SignIn(ctx context.Context, email, password string) (string, stri
 	r.Password = pswd
 	r.RefreshToken = refresh
 	r.LastLogin = time.Now()
+	r.Fingerprint = fingerprint
 	err = a.repo.Auth.InsertSession(ctx, r)
 	if err != nil {
 		return "", "", err

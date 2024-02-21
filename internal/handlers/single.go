@@ -4,33 +4,36 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/MamushevArup/typeracer/internal/models"
+	"github.com/MamushevArup/typeracer/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"strings"
 )
 
+func authHeader(c *gin.Context) (uuid.UUID, string) {
+	auth := c.GetHeader("Authorization")
+	// as usual cut bearer prefix
+	token := strings.Split(auth, " ")[0]
+	validateToken, err := utils.ValidateToken(token)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return [16]byte{}, ""
+	}
+
+	racerUUID, err := uuid.Parse(validateToken.ID)
+	if err != nil {
+		newErrorResponse(c, http.StatusUnauthorized, err.Error())
+		return [16]byte{}, ""
+	}
+	return racerUUID, validateToken.Role
+}
+
 func (h *handler) startRace(c *gin.Context) {
-	// TODO check if racer with this id exist and correctness of type race
-	/*
-		{
-			"racer_id" : uuid.UUID,
-		}
-	*/
-	var racer struct {
-		RacerID uuid.UUID `json:"racer_id"`
-	}
 
-	if err := c.BindJSON(&racer); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
-		return
-	}
+	racerUUID, _ := authHeader(c)
 
-	if _, err := uuid.Parse(racer.RacerID.String()); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid UUID format for racer_id")
-		return
-	}
-
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), racer.RacerID)
+	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -40,7 +43,7 @@ func (h *handler) startRace(c *gin.Context) {
 		return
 	}
 
-	race, err := h.service.PracticeY.StartRace(context.Background(), racer.RacerID)
+	race, err := h.service.PracticeY.StartRace(context.Background(), racerUUID)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -72,26 +75,21 @@ func (h *handler) startRace(c *gin.Context) {
 func (h *handler) currWPM(c *gin.Context) {
 	/*
 		{
-			"racer_id", "current index", "duration"
+			"current index", "duration"
 		}
 	*/
+
+	racerUUID, _ := authHeader(c)
+
 	var curr struct {
-		RacerId  uuid.UUID `json:"racer_id"`
-		CurrIdx  int       `json:"current_index"`
-		Duration int       `json:"duration"`
+		CurrIdx  int `json:"current_index"`
+		Duration int `json:"duration"`
 	}
 	var resp struct {
-		RacerId uuid.UUID `json:"racer_id"`
-		Wpm     int       `json:"wpm"`
+		Wpm int `json:"wpm"`
 	}
 	if err := c.BindJSON(&curr); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
-	}
-
-	// Check if the RacerID is a valid UUID
-	if _, err := uuid.Parse(curr.RacerId.String()); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid UUID format for racer_id")
-		return
 	}
 
 	// Perform other validations as needed
@@ -105,7 +103,7 @@ func (h *handler) currWPM(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), curr.RacerId)
+	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -119,22 +117,18 @@ func (h *handler) currWPM(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	resp.RacerId = curr.RacerId
 	resp.Wpm = calc
 	c.JSON(http.StatusCreated, &resp)
 }
 
 func (h *handler) endRace(c *gin.Context) {
+
+	racerUUID, _ := authHeader(c)
+
 	var req *models.ReqEndSingle
 
 	if err := c.BindJSON(&req); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid message body")
-		return
-	}
-
-	// Check if the RacerID is a valid UUID
-	if _, err := uuid.Parse(req.RacerID.String()); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid UUID format for racer_id")
 		return
 	}
 
@@ -149,7 +143,7 @@ func (h *handler) endRace(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), req.RacerID)
+	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -158,16 +152,16 @@ func (h *handler) endRace(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
 		return
 	}
+	req.RacerId = racerUUID
 	race, err := h.service.PracticeY.EndRace(c, req)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 	var endRace struct {
-		RacerId  uuid.UUID `json:"racer_id"`
-		Wpm      int       `json:"wpm" db:"speed"`
-		Accuracy float64   `json:"accuracy" db:"accuracy"`
-		Duration int       `json:"duration" db:"duration"`
+		Wpm      int     `json:"wpm" db:"speed"`
+		Accuracy float64 `json:"accuracy" db:"accuracy"`
+		Duration int     `json:"duration" db:"duration"`
 	}
 
 	end, err := json.Marshal(race)

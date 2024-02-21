@@ -24,7 +24,7 @@ type Racer struct {
 }
 
 type RacerAuth struct {
-	ID           uuid.UUID `db:"id"`
+	ID           uuid.UUID `db:"user_id"`
 	Email        string    `db:"email"`
 	Password     string    `db:"password"`
 	Username     string    `db:"username"`

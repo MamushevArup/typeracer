@@ -59,7 +59,7 @@ func (s *service) EndRace(ctx context.Context, req *models.ReqEndSingle) (*model
 	if length < req.Errors {
 		return &resp, lenErr
 	}
-	resp.RacerId = req.RacerID
+	resp.RacerId = req.RacerId
 	resp.Wpm = int(countWPM(length, req.Duration))
 	resp.Accuracy = calcAccuracy(req.Errors, length)
 	resp.Duration = req.Duration

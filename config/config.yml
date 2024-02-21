@@ -5,7 +5,7 @@ http_server:
   idle_timeout: 60s
 postgres:
   port: 5432
-  host: localhost
+  host: db2
   database: typeracer
   user: postgres
   url: postgres://postgres:Cicada_3301@localhost:5432/typeracer

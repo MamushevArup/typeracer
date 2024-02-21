@@ -27,7 +27,7 @@ type RespEndSingle struct {
 }
 
 type ReqEndSingle struct {
-	RacerID  uuid.UUID `json:"-"`
+	RacerId  uuid.UUID `json:"-"`
 	Duration int       `json:"duration"`
 	Errors   int       `json:"errors"`
 }

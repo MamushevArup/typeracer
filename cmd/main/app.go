@@ -7,7 +7,6 @@ import (
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/MamushevArup/typeracer/pkg/psql"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -59,9 +58,9 @@ import (
 
 func main() {
 	// Init .env reader
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("can't read .env %v", err)
-	}
+	//if err := godotenv.Load(); err != nil {
+	//	log.Fatalf("can't read .env %v", err)
+	//}
 
 	// Init Config
 	cfg, err := internal.NewConfig()

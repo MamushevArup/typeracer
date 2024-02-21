@@ -20,11 +20,16 @@ var (
 
 func (h *handler) signIn(c *gin.Context) {
 	var sign struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		Fingerprint string `json:"fingerprint"`
 	}
 	if err := c.BindJSON(&sign); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
+	}
+	if sign.Fingerprint == "" {
+		newErrorResponse(c, http.StatusBadRequest, "fingerprint empty")
 		return
 	}
 
@@ -33,7 +38,7 @@ func (h *handler) signIn(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.service.Auth.SignIn(context.TODO(), sign.Email, sign.Password)
+	access, refresh, err := h.service.Auth.SignIn(context.TODO(), sign.Email, sign.Password, sign.Fingerprint)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -55,9 +60,10 @@ func (h *handler) signUp(c *gin.Context) {
 		}
 	*/
 	var r struct {
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Email       string `json:"email"`
+		Username    string `json:"username"`
+		Password    string `json:"password"`
+		Fingerprint string `json:"fingerprint"`
 	}
 
 	if err := c.BindJSON(&r); err != nil {
@@ -79,7 +85,7 @@ func (h *handler) signUp(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.service.Auth.SignUp(context.TODO(), r.Email, r.Username, r.Password)
+	access, refresh, err := h.service.Auth.SignUp(context.TODO(), r.Email, r.Username, r.Password, r.Fingerprint)
 
 	if err != nil {
 		return
@@ -124,4 +130,43 @@ func emailAndPasswdValidation(email, password string) error {
 		return symbol
 	}
 	return nil
+}
+
+func (h *handler) logOut(c *gin.Context) {
+	// here I will get refresh token and remove by this refresh token
+	refresh, err := c.Cookie("refresh_token")
+	if err != nil {
+		newErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+	err = h.service.Auth.Logout(context.TODO(), refresh)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.Status(200)
+}
+
+func (h *handler) refresh(c *gin.Context) {
+	var f struct {
+		Fingerprint string `json:"fingerprint"`
+	}
+	if err := c.BindJSON(&f); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
+	}
+	cookie, err := c.Cookie("refresh_token")
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "cookie not sent")
+		return
+	}
+	access, refresh, err := h.service.Auth.RefreshToken(context.TODO(), cookie, f.Fingerprint)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
+	c.JSON(http.StatusCreated, gin.H{
+		"access": access,
+	})
 }
