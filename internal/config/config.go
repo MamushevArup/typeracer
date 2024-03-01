@@ -9,6 +9,7 @@ import (
 type Config struct {
 	HttpServer `yaml:"http_server"`
 	Postgres   `yaml:"postgres"`
+	BaseUrl    string `yaml:"base_url"`
 }
 
 type HttpServer struct {

@@ -32,7 +32,7 @@ func ValidateToken(tokenString string) (*claimsBody, error) {
 	if !ok {
 		return nil, jwt.ErrTokenInvalidClaims
 	}
-	if claim.ExpiresAt.Before(time.Now().UTC()) {
+	if claim.ExpiresAt.Before(time.Now()) {
 		return nil, jwt.ErrTokenExpired
 	}
 	return &claimsBody{

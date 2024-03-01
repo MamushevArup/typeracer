@@ -23,6 +23,7 @@ services:
     environment:
       - POSTGRES_PASSWORD='Cicada_3301'
       - POSTGRES_DB=typeracer
+      - POSTGRES_USER=qwerty
     networks:
       - blur
     volumes:
