@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 /*
@@ -78,11 +79,18 @@ func main() {
 	repo := repository.NewRepo(lg, db)
 
 	svc := services.NewService(repo)
+
 	handler := handlers.NewHandler(svc)
 
-	if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
-		lg.Errorf("unable to create a connection %v", err)
-		os.Exit(1)
-	}
+	// deactivate link under 1 hour usage go to the database every <duration>
+	go svc.Multiple.KillLink(time.NewTicker(10 * time.Second))
 
+	go func() {
+		if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
+			lg.Errorf("unable to create a connection %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	select {}
 }

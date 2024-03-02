@@ -17,6 +17,7 @@ type Racer interface {
 	Link(id string) (uuid.UUID, error)
 	ConnectWS(conn *websocket.Conn) *models.RacerDTO
 	CheckLink(ctx context.Context, link string) error
+	KillLink(ticker *time.Ticker)
 }
 
 type service struct {
@@ -26,14 +27,11 @@ type service struct {
 	mu   sync.Mutex
 }
 
-func (s *service) RemoveLink(dur time.Duration) {
-	ticker := time.NewTicker(dur)
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-
+func (s *service) KillLink(ticker *time.Ticker) {
+	for range ticker.C {
+		err := s.repo.Multiple.CleanLink(context.TODO(), time.Now())
+		if err != nil {
+			log.Printf("error cleaning expired links %v\n", err)
 		}
 	}
 }
@@ -43,9 +41,7 @@ func (s *service) CheckLink(ctx context.Context, link string) error {
 	if err != nil {
 		return err
 	}
-	var t time.Time
-	c := t.Add(-time.Hour)
-	ex, err := s.repo.Multiple.Link(ctx, l, c)
+	ex, err := s.repo.Multiple.Link(ctx, l)
 	if err != nil {
 		return err
 	}

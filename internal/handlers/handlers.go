@@ -75,7 +75,7 @@ func (h *handler) createLink(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, "/track/join/"+link.String())
+	c.JSON(http.StatusOK, "/track/race/"+link.String())
 }
 
 var upgrader = websocket.Upgrader{

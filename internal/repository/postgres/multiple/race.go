@@ -2,6 +2,7 @@ package multiple
 
 import (
 	"context"
+	"errors"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -10,20 +11,30 @@ import (
 
 type Multiple interface {
 	InsertLink(ctx context.Context, link uuid.UUID, creator string, time time.Time) error
-	Link(ctx context.Context, link uuid.UUID, time time.Time) (bool, error)
-	//DeleteLink(ctx context.Context, currentTime time.Time) error
+	Link(ctx context.Context, link uuid.UUID) (bool, error)
+	CleanLink(ctx context.Context, currentTime time.Time) error
 }
 
-//func (r *repo) DeleteLink(ctx context.Context, currentTime time.Time) error {
-//	query := `DELETE FROM link_management`
-//}
+func (r *repo) CleanLink(ctx context.Context, currentTime time.Time) error {
+	query := `UPDATE link_management SET is_expired=true WHERE created_at < $1::timestamp with time zone - INTERVAL '1 hour'`
 
-func (r *repo) Link(ctx context.Context, link uuid.UUID, t time.Time) (bool, error) {
-	query := `SELECT COUNT(*) FROM link_management WHERE link=$1 AND created_at>=$2 AND created_at<=NOW()`
+	commandTag, err := r.db.Exec(ctx, query, currentTime)
+	if err != nil {
+		r.lg.Errorf("unable to update expiry due to %v", err)
+		return err
+	}
+	if !commandTag.Update() {
+		return errors.New("update not affected false")
+	}
+	return nil
+}
+
+func (r *repo) Link(ctx context.Context, link uuid.UUID) (bool, error) {
+	query := `SELECT COUNT(*) FROM link_management WHERE link=$1 AND is_expired=$2`
 
 	var count int
 
-	err := r.db.QueryRow(ctx, query, link, t).Scan(&count)
+	err := r.db.QueryRow(ctx, query, link, false).Scan(&count)
 	if err != nil {
 		return false, err
 	}
