@@ -62,17 +62,19 @@ func (r *repo) StartSingle(ctx context.Context, userID, raceID uuid.UUID) (*mode
 	identifiers.textId = textUUID
 	identifiers.raceId = raceID
 	// fetch data from racer table and place it in single
-	racer := "SELECT username, avatar FROM racer WHERE id = $1"
+
+	racer := `SELECT username, avatar FROM racer WHERE id = $1`
 	err = pgxscan.Get(ctx, begin, single, racer, userID)
 	if err != nil {
 		r.lg.Errorf("can't scan racer data %v", err)
 		return nil, err
 	}
-
 	// fetch data from text and contributor table and place it in single
-	text := fmt.Sprintf("SELECT content, length, contributor FROM text JOIN " +
-		"contributor on text.contributor_id=contributor.user_id where text.id=$1 and contributor_id=$2")
-	err = pgxscan.Get(ctx, begin, single, text, textUUID, userID)
+	text := `SELECT content, length, author, r.username as contributor_name
+			FROM racer r
+			    join text t on r.id = t.contributor_id 
+				where t.id=$1`
+	err = pgxscan.Get(ctx, begin, single, text, textUUID)
 	if err != nil {
 		r.lg.Errorf("can't scan text data %v", err)
 		return nil, err

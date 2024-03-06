@@ -1,29 +1,26 @@
-package internal
+package config
 
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"time"
 )
 
 type Config struct {
 	HttpServer `yaml:"http_server"`
 	Postgres   `yaml:"postgres"`
-	BaseUrl    string `yaml:"base_url"`
 }
 
 type HttpServer struct {
-	Port        string        `yaml:"port"`
-	Host        string        `yaml:"host"`
-	Timeout     time.Duration `yaml:"timeout"`
-	IdleTimeout time.Duration `yaml:"idle_timeout"`
+	Port        string `yaml:"port"`
+	Host        string `yaml:"host"`
+	Timeout     string `yaml:"timeout"`
+	IdleTimeout string `yaml:"idle_timeout"`
 }
 type Postgres struct {
 	Port     string `yaml:"port"`
 	Host     string `yaml:"host"`
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
-	URL      string `yaml:"url"`
 }
 
 func NewConfig() (*Config, error) {

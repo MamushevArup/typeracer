@@ -8,12 +8,12 @@ import (
 // Single represents the single table in PostgreSQL.
 type Single struct {
 	ID              uuid.UUID `json:"-" db:"id"`
-	RacerID         uuid.UUID `json:"racer_id"`
+	RacerID         uuid.UUID `json:"-"`
 	TextID          uuid.UUID `json:"-"`
 	Text            string    `json:"text" db:"content"`
 	TextLen         int       `json:"text_len" db:"length"`
 	TextAuthor      string    `json:"text_author" db:"author"`
-	ContributorName string    `json:"contributor_name" db:"contributor"`
+	ContributorName string    `json:"contributor_name" db:"contributor_name"`
 	RacerName       string    `json:"racer_name" db:"username"`
 	Avatar          string    `json:"avatar" db:"avatar"`
 }

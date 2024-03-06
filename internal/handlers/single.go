@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,12 @@ import (
 func authHeader(c *gin.Context) (uuid.UUID, string) {
 	auth := c.GetHeader("Authorization")
 	// as usual cut bearer prefix
-	token := strings.Split(auth, " ")[0]
+	slice := strings.Split(auth, " ")
+	if len(slice) != 2 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "auth header is not well formatted expect Bearer <token>"})
+		return [16]byte{}, ""
+	}
+	token := slice[1]
 	validateToken, err := utils.ValidateToken(token)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -48,16 +54,14 @@ func (h *handler) startRace(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+	fmt.Println(race)
 	var stRace struct {
-		ID              uuid.UUID `json:"-" db:"id"`
-		RacerID         uuid.UUID `json:"racer_id"`
-		TextID          uuid.UUID `json:"-"`
-		Text            string    `json:"content" db:"content"`
-		TextLen         int       `json:"length" db:"length"`
-		TextAuthor      string    `json:"text_author" db:"author"`
-		ContributorName string    `json:"contributor_name" db:"contributor"`
-		RacerName       string    `json:"racer_name" db:"username"`
-		Avatar          string    `json:"avatar" db:"avatar"`
+		Text            string `json:"text" db:"content"`
+		TextLen         int    `json:"text_len" db:"length"`
+		TextAuthor      string `json:"text_author" db:"author"`
+		ContributorName string `json:"contributor_name" db:"contributor"`
+		RacerName       string `json:"racer_name" db:"username"`
+		Avatar          string `json:"avatar" db:"avatar"`
 	}
 	marshal, err := json.Marshal(race)
 	if err != nil {

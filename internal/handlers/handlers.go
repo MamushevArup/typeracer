@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/middleware"
 	"github.com/MamushevArup/typeracer/internal/services"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -26,6 +27,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 	// this middleware check for jwt token valid and expiry
 	mdl := middleware.NewMiddleware(h.service)
 
+	router.Use(cors.Default())
 	router.Use(mdl.AuthMiddleware())
 	sgl := router.Group("/single")
 	{

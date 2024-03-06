@@ -78,12 +78,13 @@ func (s *service) ConnectWS(conn *websocket.Conn) *models.RacerDTO {
 	s.hub.Broadcast <- msg
 	s.hub.Register <- racer
 
+	fmt.Println(s.hub.Broadcast)
+
 	go cl.writeMessage()
 	go cl.readMessage()
 
-	s.Run()
+	go s.Run()
 
-	fmt.Println(s.hub.Broadcast)
 	return racer
 }
 

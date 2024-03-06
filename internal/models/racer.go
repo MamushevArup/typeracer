@@ -42,7 +42,7 @@ type Contributor struct {
 	TextID uuid.UUID `json:"text_id" db:"text_id"`
 }
 type ContributeText struct {
-	RacerID     uuid.UUID `json:"racer_id"`
+	RacerID     uuid.UUID
 	TextID      uuid.UUID `json:"-"`
 	Content     string    `json:"content"`
 	Length      int       `json:"-"`

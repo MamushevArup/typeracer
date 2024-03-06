@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"github.com/MamushevArup/typeracer/internal/models"
+	"github.com/MamushevArup/typeracer/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -17,6 +18,7 @@ func (h *handler) contribute(c *gin.Context) {
 	err := h.service.Contribute.ContributeText(ctr)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "text successfully sent to moderation",
@@ -34,10 +36,18 @@ func entryValidation(c *gin.Context, h *handler, ctr *models.ContributeText) {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
-	if _, err := uuid.Parse(ctr.RacerID.String()); err != nil {
+	accessT := c.GetHeader("Authorization")
+	access, err := utils.ValidateToken(accessT)
+	if err != nil {
+		newErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+	uAcess, err := uuid.Parse(access.ID)
+	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid UUID format for racer_id")
 		return
 	}
+	ctr.RacerID = uAcess
 	ex, err := h.service.Contribute.RacerExists(context.Background(), ctr.RacerID)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
