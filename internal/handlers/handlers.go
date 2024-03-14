@@ -27,7 +27,13 @@ func (h *handler) InitRoutes() *gin.Engine {
 	// this middleware check for jwt token valid and expiry
 	mdl := middleware.NewMiddleware(h.service)
 
-	router.Use(cors.Default())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Authorization"},
+		AllowCredentials: true,
+	}))
+	
 	router.Use(mdl.AuthMiddleware())
 	sgl := router.Group("/single")
 	{

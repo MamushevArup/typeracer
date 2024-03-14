@@ -130,6 +130,7 @@ func (s *service) Run() {
 	for {
 		select {
 		case m := <-s.hub.Broadcast:
+			fmt.Println("ENTERED THIS METHOD NOW")
 			s.mu.Lock()
 			if _, ok := s.hub.Racers[s.mlt.GeneratedLink.String()]; ok {
 				s.hub.RacerConn.Message <- m
