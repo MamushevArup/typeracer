@@ -1,9 +1,5 @@
 package models
 
-import (
-	"github.com/gorilla/websocket"
-)
-
 type Hub struct {
 	Racers     map[string]bool `json:"racer"`
 	Broadcast  chan *Message   `json:"broadcast"`
@@ -13,9 +9,8 @@ type Hub struct {
 }
 
 type RacerDTO struct {
-	Conn     *websocket.Conn `json:"conn"`
-	Username string          `json:"username"`
-	Message  chan *Message   `json:"message"`
+	Username string `json:"username"`
+	Duration int    `json:"duration"`
 }
 
 type Message struct {
