@@ -2,6 +2,7 @@ package race
 
 import (
 	"context"
+	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -10,6 +11,7 @@ import (
 type Multiple interface {
 	Texts(ctx context.Context) ([]uuid.UUID, error)
 	Text(ctx context.Context, id uuid.UUID) (string, error)
+	AddRacers(ctx context.Context, mult models.MultipleRace) error
 }
 
 type multiple struct {
@@ -25,7 +27,7 @@ func NewRace(lg *logger.Logger, db *pgxpool.Pool) Multiple {
 }
 
 func (m *multiple) Texts(ctx context.Context) ([]uuid.UUID, error) {
-	query := `SELECT id  FROM text`
+	query := `SELECT text_id  FROM random_text`
 	rows, err := m.db.Query(ctx, query)
 	if err != nil {
 		m.lg.Errorf("unable to get text due to %v", err)
@@ -64,4 +66,14 @@ func (m *multiple) Text(ctx context.Context, id uuid.UUID) (string, error) {
 		return "", err
 	}
 	return content, nil
+}
+
+func (m *multiple) AddRacers(ctx context.Context, mult models.MultipleRace) error {
+	query := `INSERT INTO multiple (generated_link, creator_id, track_name, created_at, racers, text_id) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := m.db.Exec(ctx, query, mult.GeneratedLink, mult.CreatorId, mult.TrackName, mult.CreatedAt, mult.Racers, mult.Text)
+	if err != nil {
+		m.lg.Errorf("unable to insert multiple")
+		return err
+	}
+	return nil
 }

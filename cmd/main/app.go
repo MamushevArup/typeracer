@@ -73,10 +73,12 @@ func main() {
 
 	// Init logger
 	lg := logger.NewLogger()
+
 	// Init DBClient
 	db := psql.NewDBConnector(cfg)
 
 	defer db.Close()
+
 	// Init repository
 	repo := repository.NewRepo(lg, db)
 
@@ -87,10 +89,13 @@ func main() {
 	// deactivate link under 1 hour usage go to the database every <duration>
 	go svc.Link.Kill(time.NewTicker(10 * time.Second))
 
-	if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
-		lg.Errorf("unable to create a connection %v", err)
-		os.Exit(1)
-	}
+	go func() {
+		if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
+			lg.Errorf("unable to create a connection %v", err)
+			os.Exit(1)
+		}
+	}()
+
 	select {}
 
 }

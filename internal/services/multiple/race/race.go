@@ -3,55 +3,109 @@ package race
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"log"
 	"math/rand"
+	"sync"
+	"time"
 )
 
-type WebSocketConnection interface {
-	SendMessage(message *models.RacerDTO) error
-	ReceiveMessage() (*models.RacerDTO, error)
-}
+const (
+	maxRacer = 5
+)
+
+var (
+	timer = 3
+)
 
 type Racer interface {
-	ConnectWS(conn WebSocketConnection) *models.RacerDTO
 	RandomText(ctx context.Context) (string, error)
-}
-
-type WebSocketConn struct {
-	Conn *websocket.Conn
-}
-
-func (wsc *WebSocketConn) SendMessage(message *models.RacerDTO) error {
-	return wsc.Conn.WriteJSON(message)
-}
-
-func (wsc *WebSocketConn) ReceiveMessage() (*models.RacerDTO, error) {
-	var message models.RacerDTO
-	err := wsc.Conn.ReadJSON(&message)
-	if err != nil {
-		return nil, err
-	}
-	return &message, nil
+	Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, error)
+	Timer() (int, error)
+	WhiteLine(ctx context.Context, link string) error
 }
 
 type service struct {
-	repo *repository.Repo
-	hub  *models.Hub
+	repo        *repository.Repo
+	racers      []string
+	connections []*websocket.Conn
+	mu          sync.Mutex
+	d           data
 }
 
-func (s *service) ConnectWS(conn WebSocketConnection) *models.RacerDTO {
-	// Use the conn object to send and receive messages
-	// For example:
-	message, err := conn.ReceiveMessage()
-	if err != nil {
-		// Handle error
+// data struct hold values need to pass to the repo layer
+type data struct {
+	textID    uuid.UUID
+	createdAt time.Time
+}
+
+func (s *service) Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if len(s.racers) > maxRacer {
+		return nil, errors.New("maximum 5 racers allowed")
+
 	}
-	err = conn.SendMessage(message)
+	if len(s.racers) == maxRacer {
+		return &s.connections, nil
+	}
+	//body, err := utils.ValidateToken(token)
+	//if err != nil {
+	//	return err
+	//}
+	//id, err := uuid.Parse(body.ID)
+	//if err != nil {
+	//	return err
+	//}
+
+	s.racers = append(s.racers, token)
+	s.connections = append(s.connections, conn)
+
+	if len(s.racers) == 1 {
+		s.d.createdAt = time.Now()
+	}
+
+	return &s.connections, nil
+}
+
+func (s *service) Timer() (int, error) {
+	time.Sleep(1 * time.Second)
+
+	if timer == 0 {
+		return -1, errors.New("timer is over")
+	}
+
+	timer--
+	fmt.Println(timer)
+
+	return timer, nil
+}
+
+// WhiteLine means the line where racers starts the race. Where timer is zero and race started
+func (s *service) WhiteLine(ctx context.Context, link string) error {
+	var mlt models.MultipleRace
+
+	l, err := uuid.Parse(link)
 	if err != nil {
-		// Handle error
+		log.Println(err.Error())
+		return errors.New("link incorrect")
+	}
+
+	mlt.GeneratedLink = l
+	mlt.CreatedAt = s.d.createdAt
+	mlt.Racers = s.racers
+	mlt.CreatorId = s.racers[0]
+	mlt.Text = s.d.textID
+	fmt.Println(mlt.Text, "MLT_TEXT")
+	err = s.repo.Multiple.AddRacers(ctx, mlt)
+	if err != nil {
+		log.Println(err.Error())
+		return err
 	}
 	return nil
 }
@@ -62,6 +116,8 @@ func (s *service) RandomText(ctx context.Context) (string, error) {
 		return "", errors.New("unable to get text")
 	}
 	id := randomize(ids)
+	s.d.textID = id
+	fmt.Println(s.d.textID, "SDTEXTID")
 	text, err := s.repo.Multiple.Text(ctx, id)
 	if err != nil {
 		return "", errors.New("unable to get text")
@@ -78,7 +134,9 @@ func randomize(ids []uuid.UUID) uuid.UUID {
 
 func NewMultiple(repo *repository.Repo) Racer {
 	return &service{
-		repo: repo,
-		hub:  models.NewHub(),
+		repo:        repo,
+		racers:      make([]string, 0, 5),
+		connections: make([]*websocket.Conn, 0, 5),
+		d:           data{},
 	}
 }

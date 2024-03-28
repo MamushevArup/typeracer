@@ -8,11 +8,11 @@ import (
 // Response for start Multiple Race
 type MultipleRace struct {
 	GeneratedLink uuid.UUID `json:"generated_link"`
-	CreatorId     uuid.UUID `json:"racer_id"`
+	CreatorId     string    `json:"racer_id"`
 	TrackName     string    `json:"track_name"`
 	CreatedAt     time.Time `json:"created_at"`
 	Racers        []string  `json:"racers"`
-	Text          string    `json:"text"`
+	Text          uuid.UUID `json:"text"`
 }
 
 type MultipleRaceDTO struct {

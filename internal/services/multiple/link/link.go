@@ -3,7 +3,6 @@ package link
 import (
 	"context"
 	"errors"
-	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/google/uuid"
 	"log"
@@ -18,13 +17,11 @@ type Checker interface {
 
 type link struct {
 	repo *repository.Repo
-	mlt  *models.MultipleRace
 }
 
 func NewLink(repo *repository.Repo) Checker {
 	return &link{
 		repo: repo,
-		mlt:  new(models.MultipleRace),
 	}
 }
 
@@ -54,15 +51,8 @@ func (l *link) Check(ctx context.Context, link string) error {
 }
 func (l *link) Create(id string) (uuid.UUID, error) {
 	trackId := uuid.New()
-	l.mlt.GeneratedLink = trackId
-	uid, err := uuid.Parse(id)
-	if err != nil {
-		return [16]byte{}, err
-	}
-	l.mlt.CreatorId = uid
-	l.mlt.CreatedAt = time.Now()
 
-	err = l.repo.Link.Add(context.TODO(), trackId, id, time.Now())
+	err := l.repo.Link.Add(context.TODO(), trackId, id, time.Now())
 	if err != nil {
 		return [16]byte{}, err
 	}
