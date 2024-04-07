@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"github.com/MamushevArup/typeracer/internal/middleware"
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/gin-contrib/cors"
@@ -9,7 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"sync/atomic"
 )
 
 // all validation will make here
@@ -21,8 +21,6 @@ type Handler interface {
 type handler struct {
 	service *services.Service
 }
-
-var timerStarted int32
 
 func (h *handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
@@ -117,44 +115,41 @@ func (h *handler) raceTrack(c *gin.Context) {
 		return
 	}
 
-	connections, err := h.service.Multiple.Join(id, conn)
+	connections, err := h.service.Multiple.Join(id, conn, link)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	go func() {
+		for {
 
-	if atomic.CompareAndSwapInt32(&timerStarted, 0, 1) {
-		go func() {
-			var t int
-			for {
-				if len(*connections) > 1 {
-
-					t, err = h.service.Multiple.Timer()
+			t, err := h.service.Multiple.Timer(link, connections)
+			if err != nil {
+				if errors.Is(err, errors.New("waiting for other competitors")) {
+					continue
+				}
+				err2 := h.service.Multiple.WhiteLine(context.TODO(), link)
+				if err2 != nil {
+					log.Println(err2.Error())
+					return
+				}
+				log.Println(err.Error())
+				return
+			}
+			sentClients := make(map[*websocket.Conn]bool)
+			for _, clientConn := range *connections {
+				if _, sent := sentClients[clientConn]; !sent {
+					// Send the message to the writer goroutine
+					err = clientConn.WriteJSON(t)
 					if err != nil {
-						err2 := h.service.Multiple.WhiteLine(context.TODO(), link)
-						if err2 != nil {
-							log.Println(err2.Error())
-							return
-						}
-						log.Println(err.Error())
+						log.Println(err)
 						return
 					}
-					sentClients := make(map[*websocket.Conn]bool)
-					for _, clientConn := range *connections {
-						if _, sent := sentClients[clientConn]; !sent {
-							// Send the message to the writer goroutine
-							err = clientConn.WriteJSON(t)
-							if err != nil {
-								log.Println(err)
-								return
-							}
-							sentClients[clientConn] = true
-						}
-					}
+					sentClients[clientConn] = true
 				}
 			}
-		}()
-	}
+		}
+	}()
 
 	//cl.connections = append(cl.connections, conn) // Add the new connection to the slice
 	//fmt.Println(cl.connections)

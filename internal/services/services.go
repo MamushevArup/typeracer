@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/MamushevArup/typeracer/internal/services/auth"
 	"github.com/MamushevArup/typeracer/internal/services/contribute"
@@ -17,12 +18,12 @@ type Service struct {
 	Link       link.Checker
 }
 
-func NewService(repo *repository.Repo) *Service {
+func NewService(repo *repository.Repo, cfg *config.Config) *Service {
 	return &Service{
 		PracticeY:  single.NewPracticeY(repo),
 		Contribute: contribute.NewContribute(repo),
 		Auth:       auth.NewAuth(repo),
-		Multiple:   race.NewMultiple(repo),
+		Multiple:   race.NewMultiple(repo, cfg),
 		Link:       link.NewLink(repo),
 	}
 }

@@ -82,7 +82,7 @@ func main() {
 	// Init repository
 	repo := repository.NewRepo(lg, db)
 
-	svc := services.NewService(repo)
+	svc := services.NewService(repo, cfg)
 
 	handler := handlers.NewHandler(svc)
 

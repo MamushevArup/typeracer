@@ -52,6 +52,8 @@ func (l *link) Check(ctx context.Context, link string) error {
 func (l *link) Create(id string) (uuid.UUID, error) {
 	trackId := uuid.New()
 
+	// TODO send link using channel read only to the multiple
+
 	err := l.repo.Link.Add(context.TODO(), trackId, id, time.Now())
 	if err != nil {
 		return [16]byte{}, err

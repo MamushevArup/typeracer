@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/google/uuid"
@@ -14,23 +15,17 @@ import (
 	"time"
 )
 
-const (
-	maxRacer = 5
-)
-
-var (
-	timer = 3
-)
-
 type Racer interface {
 	RandomText(ctx context.Context) (string, error)
-	Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, error)
-	Timer() (int, error)
+	Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, error)
+	Timer(link string, cons *[]*websocket.Conn) (int, error)
 	WhiteLine(ctx context.Context, link string) error
 }
 
 type service struct {
 	repo        *repository.Repo
+	timers      map[string]int
+	cfg         *config.Config
 	racers      []string
 	connections []*websocket.Conn
 	mu          sync.Mutex
@@ -43,15 +38,15 @@ type data struct {
 	createdAt time.Time
 }
 
-func (s *service) Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, error) {
+func (s *service) Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	if len(s.racers) > maxRacer {
+	maxRacers := s.cfg.Multiple.MaxRacer
+	if len(s.racers) > maxRacers {
 		return nil, errors.New("maximum 5 racers allowed")
 
 	}
-	if len(s.racers) == maxRacer {
+	if len(s.racers) == maxRacers {
 		return &s.connections, nil
 	}
 	//body, err := utils.ValidateToken(token)
@@ -66,6 +61,11 @@ func (s *service) Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, 
 	s.racers = append(s.racers, token)
 	s.connections = append(s.connections, conn)
 
+	t := s.cfg.Multiple.Timer
+	if _, exists := s.timers[link]; !exists {
+		s.timers[link] = t
+	}
+
 	if len(s.racers) == 1 {
 		s.d.createdAt = time.Now()
 	}
@@ -73,17 +73,23 @@ func (s *service) Join(token string, conn *websocket.Conn) (*[]*websocket.Conn, 
 	return &s.connections, nil
 }
 
-func (s *service) Timer() (int, error) {
-	time.Sleep(1 * time.Second)
+func (s *service) Timer(link string, cons *[]*websocket.Conn) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if timer == 0 {
+	if len(*cons) < 2 {
+		return -1, errors.New("waiting for other competitors")
+	}
+
+	if timer, ok := s.timers[link]; !ok || timer == 0 {
+		delete(s.timers, link)
 		return -1, errors.New("timer is over")
 	}
 
-	timer--
-	fmt.Println(timer)
+	time.Sleep(1 * time.Second)
+	s.timers[link]--
 
-	return timer, nil
+	return s.timers[link], nil
 }
 
 // WhiteLine means the line where racers starts the race. Where timer is zero and race started
@@ -132,9 +138,11 @@ func randomize(ids []uuid.UUID) uuid.UUID {
 	return ids[rand.Intn(len(ids))] // Select a random UUID from the slice
 }
 
-func NewMultiple(repo *repository.Repo) Racer {
+func NewMultiple(repo *repository.Repo, cfg *config.Config) Racer {
 	return &service{
 		repo:        repo,
+		cfg:         cfg,
+		timers:      make(map[string]int),
 		racers:      make([]string, 0, 5),
 		connections: make([]*websocket.Conn, 0, 5),
 		d:           data{},

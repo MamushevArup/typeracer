@@ -8,6 +8,7 @@ import (
 type Config struct {
 	HttpServer `yaml:"http_server"`
 	Postgres   `yaml:"postgres"`
+	Multiple   `yaml:"multiple"`
 }
 
 type HttpServer struct {
@@ -21,6 +22,11 @@ type Postgres struct {
 	Host     string `yaml:"host"`
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
+}
+
+type Multiple struct {
+	MaxRacer int `yaml:"max_racers"`
+	Timer    int `yaml:"timer"`
 }
 
 func NewConfig() (*Config, error) {
