@@ -8,7 +8,7 @@ import (
 type Racer struct {
 	Id            uuid.UUID `json:"-" db:"id"`
 	Email         string    `json:"email" db:"email"`
-	Password      string    `db:"password"`
+	Password      string    `json:"-" db:"password"`
 	Username      string    `json:"username" db:"username"`
 	Avatar        string    `json:"avatar" db:"avatar"`
 	Country       string    `json:"country" db:"country"`

@@ -12,6 +12,7 @@ type Multiple interface {
 	Texts(ctx context.Context) ([]uuid.UUID, error)
 	Text(ctx context.Context, id uuid.UUID) (string, error)
 	AddRacers(ctx context.Context, mult models.MultipleRace) error
+	User(ctx context.Context, id uuid.UUID) (models.RacerM, error)
 }
 
 type multiple struct {
@@ -24,6 +25,16 @@ func NewRace(lg *logger.Logger, db *pgxpool.Pool) Multiple {
 		lg: lg,
 		db: db,
 	}
+}
+
+func (m *multiple) User(ctx context.Context, id uuid.UUID) (models.RacerM, error) {
+	query := `SELECT email, username, avatar, role FROM racer WHERE id = $1`
+
+	var racer models.RacerM
+
+	err := m.db.QueryRow(ctx, query, id).Scan(&racer.Email, &racer.Username, &racer.Avatar, &racer.Role)
+	m.lg.Infof("racer %v", racer)
+	return racer, err
 }
 
 func (m *multiple) Texts(ctx context.Context) ([]uuid.UUID, error) {

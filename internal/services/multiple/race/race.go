@@ -17,10 +17,13 @@ import (
 
 type Racer interface {
 	RandomText(ctx context.Context) (string, error)
-	Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, error)
+	Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, models.RacerM, error)
 	Timer(link string, cons *[]*websocket.Conn) (int, error)
 	WhiteLine(ctx context.Context, link string) error
+	CurrentSpeed(racer *models.RacerCurrentWpm) (models.RacerSpeed, error)
 }
+
+var ErrorWaitingRacers = errors.New("waiting for other competitors")
 
 type service struct {
 	repo        *repository.Repo
@@ -38,27 +41,23 @@ type data struct {
 	createdAt time.Time
 }
 
-func (s *service) Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, error) {
+func (s *service) Join(id string, conn *websocket.Conn, link string) (*[]*websocket.Conn, models.RacerM, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	maxRacers := s.cfg.Multiple.MaxRacer
 	if len(s.racers) > maxRacers {
-		return nil, errors.New("maximum 5 racers allowed")
+		return nil, models.RacerM{}, errors.New("maximum 5 racers allowed")
 
 	}
 	if len(s.racers) == maxRacers {
-		return &s.connections, nil
+		return &s.connections, models.RacerM{}, nil
 	}
-	//body, err := utils.ValidateToken(token)
-	//if err != nil {
-	//	return err
-	//}
-	//id, err := uuid.Parse(body.ID)
-	//if err != nil {
-	//	return err
-	//}
 
-	s.racers = append(s.racers, token)
+	s.racers = append(s.racers, id)
 	s.connections = append(s.connections, conn)
 
 	t := s.cfg.Multiple.Timer
@@ -70,7 +69,60 @@ func (s *service) Join(token string, conn *websocket.Conn, link string) (*[]*web
 		s.d.createdAt = time.Now()
 	}
 
-	return &s.connections, nil
+	parseId, err := uuid.Parse(id)
+	if err != nil {
+		tempUid, err2 := uuid.NewUUID()
+		if err2 != nil {
+			log.Println(err2)
+			return nil, models.RacerM{}, err2
+		}
+		return &s.connections, models.RacerM{
+			Role:  "guest",
+			Email: tempUid.String(),
+		}, nil
+	}
+
+	user, err := s.repo.Multiple.User(ctx, parseId)
+	if err != nil {
+		return &s.connections, models.RacerM{}, err
+	}
+
+	log.Println("Successfully return value")
+
+	return &s.connections, user, nil
+}
+
+func (s *service) CurrentSpeed(racer *models.RacerCurrentWpm) (models.RacerSpeed, error) {
+	if racer.Email == "" {
+		return models.RacerSpeed{}, errors.New("email is empty")
+	}
+	if racer.Duration <= 0 {
+		return models.RacerSpeed{}, errors.New("duration is less than or equal to 0")
+	}
+	if racer.Index < 0 {
+		return models.RacerSpeed{}, errors.New("current symbol is less than 0")
+
+	}
+	var racerSpeed models.RacerSpeed
+
+	wpm := countWPM(racer.Index, racer.Duration)
+
+	racerSpeed.Email = racer.Email
+	racerSpeed.Wpm = int(wpm)
+
+	return racerSpeed, nil
+}
+
+func countWPM(length, duration int) float64 {
+	const averageWordLength = 5 // Assuming an average word length of 5 characters
+
+	// Calculate total words in the text
+	totalWords := length / averageWordLength
+
+	// Calculate WPM
+	wpm := float64(totalWords) / (float64(duration) / 60.0)
+
+	return wpm
 }
 
 func (s *service) Timer(link string, cons *[]*websocket.Conn) (int, error) {
@@ -78,7 +130,7 @@ func (s *service) Timer(link string, cons *[]*websocket.Conn) (int, error) {
 	defer s.mu.Unlock()
 
 	if len(*cons) < 2 {
-		return -1, errors.New("waiting for other competitors")
+		return -1, ErrorWaitingRacers
 	}
 
 	if timer, ok := s.timers[link]; !ok || timer == 0 {

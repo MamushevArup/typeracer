@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// TODO for the future bring here squirrel for query building
+
 type Repo struct {
 	Starter     single.Starter
 	Contributor contributor.Contributor

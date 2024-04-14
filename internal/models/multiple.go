@@ -15,6 +15,28 @@ type MultipleRace struct {
 	Text          uuid.UUID `json:"text"`
 }
 
+type IncomingMessage struct {
+	Data interface{}
+}
+
+type RacerM struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
+	Role     string `json:"role"`
+}
+
+type RacerSpeed struct {
+	Email string `json:"email"`
+	Wpm   int    `json:"wpm"`
+}
+
+type RacerCurrentWpm struct {
+	Email    string `json:"email"`
+	Duration int    `json:"duration"`
+	Index    int    `json:"index"`
+}
+
 type MultipleRaceDTO struct {
 	GeneratedLink uuid.UUID   `json:"generated_link"`
 	TrackName     string      `json:"track_name"`
@@ -32,11 +54,4 @@ type MultipleSession struct {
 	Winner        string    `json:"winner"`
 	Place         int       `json:"place"`
 	TrackSize     int       `json:"track_size"`
-}
-
-type MultipleSessionDTO struct {
-	Duration int     `json:"duration"`
-	Wpm      int     `json:"wpm"`
-	Accuracy float64 `json:"accuracy"`
-	Place    int     `json:"place"`
 }
