@@ -37,21 +37,33 @@ type RacerCurrentWpm struct {
 	Index    int    `json:"index"`
 }
 
-type MultipleRaceDTO struct {
-	GeneratedLink uuid.UUID   `json:"generated_link"`
-	TrackName     string      `json:"track_name"`
-	Racers        []uuid.UUID `json:"racers"`
-	Text          string      `json:"text"`
+type RaceResult struct {
+	RacerId  uuid.UUID `json:"racer_id"`
+	Email    string    `json:"email"`
+	Place    int       `json:"place"`
+	Accuracy int       `json:"accuracy"`
+	Time     int       `json:"time"`
+	Wpm      int       `json:"wpm"`
 }
 
-type MultipleSession struct {
-	GeneratedLink uuid.UUID `json:"generated_link"`
-	RacerId       uuid.UUID `json:"racer_id"`
-	StartTime     time.Time `json:"start_time"`
-	Duration      int       `json:"duration"`
-	Wpm           int       `json:"wpm"`
-	Accuracy      float64   `json:"accuracy"`
-	Winner        string    `json:"winner"`
-	Place         int       `json:"place"`
-	TrackSize     int       `json:"track_size"`
+type RaceEndRequest struct {
+	Type     int    `json:"type"`
+	Errors   int    `json:"errors"`
+	Length   int    `json:"length"`
+	Email    string `json:"email"`
+	Duration int    `json:"duration"`
+}
+
+// RacerRepoM model between service and repository
+type RacerRepoM struct {
+	GeneratedLink uuid.UUID `db:"generated_link"`
+	RacerId       uuid.UUID `db:"racer_id"`
+	Duration      int       `db:"duration"`
+	Wpm           int       `db:"wpm"`
+	Accuracy      int       `db:"accuracy"`
+	StartTime     time.Time `db:"start_time"`
+	// winner is string due to the fact that we can have a guest racer which win the race
+	Winner    string `db:"winner"`
+	Place     int    `db:"place"`
+	TrackSize int    `db:"track_size"`
 }

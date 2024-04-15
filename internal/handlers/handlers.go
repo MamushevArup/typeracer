@@ -3,13 +3,8 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
-	validation "github.com/MamushevArup/typeracer/internal/middleware/auth/http/token-validation"
-	validationWs "github.com/MamushevArup/typeracer/internal/middleware/auth/ws/token-ws"
 	"github.com/MamushevArup/typeracer/internal/models"
-	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/internal/services/multiple/race"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
@@ -24,66 +19,7 @@ const (
 	leaveRace
 )
 
-type Handler interface {
-	InitRoutes() *gin.Engine
-}
-
-type handler struct {
-	service *services.Service
-}
-
-func (h *handler) InitRoutes() *gin.Engine {
-	router := gin.Default()
-
-	// this middleware check for jwt token valid and expiry
-
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-		AllowCredentials: true,
-	}))
-
-	router.Use(validation.TokenInspector())
-
-	sgl := router.Group("/single")
-	{
-		sgl.GET("/race", h.startRace)
-		sgl.POST("/end-race", h.endRace)
-		sgl.POST("/curr-wpm", h.currWPM)
-	}
-	router.POST("/contribute", h.contribute)
-	router.GET("/moderation/:id", h.moderation)
-
-	auth := router.Group("/api/auth")
-	{
-		auth.POST("/sign-in", h.signIn)
-		auth.POST("/sign-up", h.signUp)
-		auth.DELETE("/logout", h.logOut)
-		auth.POST("/refresh", h.refresh)
-	}
-	// this route stands for create racetrack and start a multiple race
-	mlt := router.Group("/track")
-	mlt.Use(validationWs.TokenVerifier())
-	{
-		mlt.POST("/link", h.createLink)
-		// this racetrack will look like this. /race/link?t=<access token>
-		mlt.GET("/race/:link", h.raceTrack)
-		mlt.DELETE("/race/finish/:id")
-	}
-
-	return router
-}
-
 func (h *handler) createLink(c *gin.Context) {
-	// I get access token and parse it and do not check for the role
-	// If settings will required then wait for number of racers
-	// here we will create a websocket channel and create a link to join
-	// we will redirect to the /race/:id route right there
-	// create a unique identifier for race then redirect to the racetrack to start race
-	/*
-		Header : access token with role, id
-	*/
 	id, _ := authHeader(c)
 
 	link, err := h.service.Link.Create(id.String())
@@ -91,11 +27,14 @@ func (h *handler) createLink(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	text, err := h.service.Multiple.RandomText(context.TODO())
+	text, err := h.service.Multiple.RandomText(c)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	c.Set("text_len", len(text))
+
 	c.JSON(http.StatusOK, gin.H{
 		"link":    link,
 		"content": text,
@@ -108,12 +47,11 @@ var upgrader = websocket.Upgrader{
 }
 
 func (h *handler) raceTrack(c *gin.Context) {
-	// check link correctness
 
-	// here with created links I will create a room for max 5 racer and open websocket connection
 	link := c.Param("link")
 
 	role := c.MustGet("Role")
+
 	id, ex := c.Get("ID")
 	if !ex {
 		id = role
@@ -132,19 +70,22 @@ func (h *handler) raceTrack(c *gin.Context) {
 		return
 	}
 
-	connections, racer := h.joinRacers(conn, link, id.(string))
-	fmt.Println(racer, "RACER")
+	connections, _ := h.joinRacers(conn, link, id.(string))
+
 	currSpeedCh := make(chan models.RacerSpeed)
+	endRaceResult := make(chan models.RaceResult)
 	errorCh := make(chan error)
 
 	go func() {
 		for {
 			var msgType models.IncomingMessage
+
 			err = conn.ReadJSON(&msgType.Data)
 			if err != nil {
 				log.Println(err)
 				return
 			}
+
 			data, ok := msgType.Data.(map[string]interface{})
 			if !ok {
 				log.Println("Invalid data format")
@@ -162,42 +103,84 @@ func (h *handler) raceTrack(c *gin.Context) {
 			case currSpeed:
 
 				var racerSpeed models.RacerCurrentWpm
+
 				err = mapstructure.Decode(data, &racerSpeed)
 				if err != nil {
 					errorCh <- err
-					return
 				}
-				currWpm, err := h.service.Multiple.CurrentSpeed(&racerSpeed)
+
+				currWpm, err := h.service.Multiple.CurrentSpeed(&racerSpeed, c.GetInt("text_len"))
 				if err != nil {
 					errorCh <- err
-					close(errorCh)
-					return
+				} else {
+					currSpeedCh <- currWpm
 				}
-				currSpeedCh <- currWpm
-			}
 
+			case endRace:
+
+				var raceEnd models.RaceEndRequest
+
+				err = mapstructure.Decode(data, &raceEnd)
+				if err != nil {
+					errorCh <- err
+				}
+
+				raceResult, err := h.service.Multiple.EndRace(raceEnd, link, id.(string))
+				if err != nil {
+					errorCh <- err
+				} else {
+					endRaceResult <- raceResult
+				}
+
+			default:
+				log.Println("Invalid type value")
+				writeMessage(connections, map[string]interface{}{"error": "Invalid type value"})
+				return
+			}
 		}
 	}()
 
 	go func() {
-		for m := range currSpeedCh {
-			writeMessage(connections, m)
-		}
-		for err := range errorCh {
-			writeMessage(connections, map[string]interface{}{"error": err.Error()})
+		for {
+			select {
+			case v, ex := <-currSpeedCh:
+				if ex {
+					writeMessage(connections, v)
+				}
+			case v, ex := <-endRaceResult:
+				if ex {
+					writeMessage(connections, v)
+				}
+			case v, ex := <-errorCh:
+				if ex {
+					writeMessage(connections, map[string]interface{}{"error": v.Error()})
+				}
+			}
+			//for m := range currSpeedCh {
+			//	writeMessage(connections, m)
+			//}
+			//for err := range errorCh {
+			//	writeMessage(connections, map[string]interface{}{"error": err.Error()})
+			//}
+			//for r := range endRaceResult {
+			//	writeMessage(connections, r)
+			//}
 		}
 	}()
+
 	h.timerSender(link, connections)
 
 }
 
 func (h *handler) joinRacers(conn *websocket.Conn, link, id string) (*[]*websocket.Conn, models.RacerM) {
+
 	connections, racer, err := h.service.Multiple.Join(id, conn, link)
 	if err != nil {
 		writeMessage(connections, map[string]interface{}{"error": err.Error()})
 		log.Println(err)
 		return connections, racer
 	}
+
 	writeMessage(connections, racer)
 	return connections, racer
 }
@@ -234,10 +217,13 @@ func (h *handler) timerSender(link string, connections *[]*websocket.Conn) chan 
 }
 
 func writeMessage(connections *[]*websocket.Conn, message interface{}) {
+
 	if *connections == nil {
 		return
 	}
+
 	sentClients := make(map[*websocket.Conn]bool)
+
 	for _, clientConn := range *connections {
 		if _, sent := sentClients[clientConn]; !sent {
 			// Send the message to the writer goroutine
@@ -249,8 +235,4 @@ func writeMessage(connections *[]*websocket.Conn, message interface{}) {
 			sentClients[clientConn] = true
 		}
 	}
-}
-
-func NewHandler(service *services.Service) Handler {
-	return &handler{service: service}
 }

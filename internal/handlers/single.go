@@ -103,7 +103,7 @@ func (h *handler) currWPM(c *gin.Context) {
 	}
 
 	if curr.CurrIdx <= 0 {
-		newErrorResponse(c, http.StatusBadRequest, "index must be non-negative")
+		newErrorResponse(c, http.StatusBadRequest, "index must be non-negative or not zero")
 		return
 	}
 

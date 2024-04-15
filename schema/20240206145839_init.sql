@@ -10,6 +10,7 @@ create table racer (
    last_login timestamp not null,
    races int default 0,
    avg_speed int default 0,
+    --total_speed
    last_race_speed int default 0,
    best_speed int default 0,
    refresh_token varchar(2056) not null,
