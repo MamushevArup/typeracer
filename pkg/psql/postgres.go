@@ -9,18 +9,25 @@ import (
 	"os"
 )
 
-func NewDBConnector(cfg *internal.Config) *pgxpool.Pool {
+func New(ctx context.Context, cfg *internal.Config) (*pgxpool.Pool, error) {
 	pg := cfg.Postgres
+
 	dbPasswd := os.Getenv("POSTGRES_PASSWORD")
+
 	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", pg.User, dbPasswd, pg.Host, pg.Port, pg.Database)
-	conn, err := pgxpool.New(context.Background(), dbUrl)
+
+	conn, err := pgxpool.New(ctx, dbUrl)
+
 	if err != nil {
-		log.Fatalf("unable to connect to database, config issue %v\n", err)
+		return nil, fmt.Errorf("%v: %w", cfg.Postgres.Database, err)
 	}
-	err = conn.Ping(context.Background())
+
+	err = conn.Ping(ctx)
 	if err != nil {
-		log.Fatalf("unable to ping database %v\n", err)
+		return nil, fmt.Errorf("%w", err)
 	}
+
 	log.Println("connect to the database successfully")
-	return conn
+
+	return conn, nil
 }
