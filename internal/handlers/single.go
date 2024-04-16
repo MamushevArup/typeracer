@@ -3,97 +3,61 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
-	"github.com/MamushevArup/typeracer/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
-	"strings"
 )
 
-func authHeader(c *gin.Context) (uuid.UUID, string) {
-	auth := c.GetHeader("Authorization")
-	// as usual cut bearer prefix
-	slice := strings.Split(auth, " ")
-	if len(slice) != 2 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "auth header is not well formatted expect Bearer <token>"})
-		return [16]byte{}, ""
-	}
-	token := slice[1]
-	validateToken, err := utils.ValidateToken(token)
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-		return [16]byte{}, ""
-	}
-
-	racerUUID, err := uuid.Parse(validateToken.ID)
-	if err != nil {
-		newErrorResponse(c, http.StatusUnauthorized, err.Error())
-		return [16]byte{}, ""
-	}
-	return racerUUID, validateToken.Role
-}
-
+// TODO implement swagger docs
 func (h *handler) startRace(c *gin.Context) {
 
-	racerUUID, _ := authHeader(c)
+	id, ex := c.Get("ID")
+	role := c.MustGet("Role")
 
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
+	if !ex {
+		id = role
+	}
+
+	ex, err := h.service.Single.RacerExists(c, id.(string))
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 	if !ex {
 		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
 		return
 	}
 
-	race, err := h.service.PracticeY.StartRace(context.Background(), racerUUID)
+	race, err := h.service.Single.StartRace(c, id.(string))
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	fmt.Println(race)
-	var stRace struct {
-		Text            string `json:"text" db:"content"`
-		TextLen         int    `json:"text_len" db:"length"`
-		TextAuthor      string `json:"text_author" db:"author"`
-		ContributorName string `json:"contributor_name" db:"contributor"`
-		RacerName       string `json:"racer_name" db:"username"`
-		Avatar          string `json:"avatar" db:"avatar"`
-	}
-	marshal, err := json.Marshal(race)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	err = json.Unmarshal(marshal, &stRace)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	c.JSON(http.StatusCreated, &stRace)
+
+	c.JSON(http.StatusCreated, race)
 }
 
+// TODO implement swagger docs
 func (h *handler) currWPM(c *gin.Context) {
-	/*
-		{
-			"current index", "duration"
-		}
-	*/
 
-	racerUUID, _ := authHeader(c)
+	id, ex := c.Get("ID")
+	role := c.MustGet("Role")
+
+	if !ex {
+		id = role
+	}
 
 	var curr struct {
-		CurrIdx  int `json:"current_index"`
+		CurrIdx  int `json:"index"`
 		Duration int `json:"duration"`
 	}
 	var resp struct {
 		Wpm int `json:"wpm"`
 	}
+
 	if err := c.BindJSON(&curr); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
 	}
 
 	// Perform other validations as needed
@@ -107,27 +71,29 @@ func (h *handler) currWPM(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
+	ex, err := h.service.Single.RacerExists(context.Background(), id.(string))
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	if !ex {
 		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
 		return
 	}
-	calc, err := h.service.PracticeY.RealTimeCalc(context.Background(), curr.CurrIdx, curr.Duration)
+
+	calc, err := h.service.Single.RealTimeCalc(context.Background(), curr.CurrIdx, curr.Duration)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+	
 	resp.Wpm = calc
 	c.JSON(http.StatusCreated, &resp)
 }
 
 func (h *handler) endRace(c *gin.Context) {
 
-	racerUUID, _ := authHeader(c)
+	//racerUUID, _ := authHeader(c)
 
 	var req *models.ReqEndSingle
 
@@ -147,7 +113,7 @@ func (h *handler) endRace(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.PracticeY.RacerExists(context.Background(), racerUUID)
+	ex, err := h.service.Single.RacerExists(context.Background(), uuid.Nil.String())
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -156,8 +122,8 @@ func (h *handler) endRace(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
 		return
 	}
-	req.RacerId = racerUUID
-	race, err := h.service.PracticeY.EndRace(c, req)
+	req.RacerId = uuid.Nil
+	race, err := h.service.Single.EndRace(c, req)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

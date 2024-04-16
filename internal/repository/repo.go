@@ -22,7 +22,7 @@ type Repo struct {
 
 func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
 	return &Repo{
-		Starter:     single.NewSingle(lg, db),
+		Starter:     single.New(lg, db),
 		Contributor: contributor.NewContributor(lg, db),
 		Auth:        authr.NewUser(db, lg),
 		Link:        link.NewManager(db, lg),

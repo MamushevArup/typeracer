@@ -3,6 +3,7 @@ package single
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/google/uuid"
@@ -14,43 +15,80 @@ import (
 // this package stands for implement the practice yourself section only
 
 type PracticeY interface {
-	StartRace(ctx context.Context, userId uuid.UUID) (*models.Single, error)
+	StartRace(ctx context.Context, userId string) (models.SingleResponse, error)
 	EndRace(ctx context.Context, req *models.ReqEndSingle) (*models.RespEndSingle, error)
-	RacerExists(ctx context.Context, racerId uuid.UUID) (bool, error)
+	RacerExists(ctx context.Context, racerId string) (bool, error)
 	RealTimeCalc(ctx context.Context, currentSymbol, duration int) (int, error)
 }
 
 type service struct {
 	repo *repository.Repo
+	ids  identifiers
+}
+
+type identifiers struct {
+	textUUID  uuid.UUID
+	racerUUID uuid.UUID
+	raceUUID  uuid.UUID
 }
 
 func NewPracticeY(repo *repository.Repo) PracticeY {
 	return &service{
 		repo: repo,
+		ids:  identifiers{},
 	}
 }
 
 var (
-	lenErr     = errors.New("invalid body error cannot be greater than text length")
-	startRace  = errors.New("you can't start a race")
-	fetchText  = errors.New("can't fetch text")
-	finishRace = errors.New("cannot finish single race")
-	// TODO replace for actual error
-	blah           = errors.New("blah blah")
+	lenErr         = errors.New("invalid body error cannot be greater than text length")
+	startRace      = errors.New("you can't start a race")
+	fetchText      = errors.New("can't fetch text")
+	finishRace     = errors.New("cannot finish single race")
 	raceNotStarted = errors.New("race is not started")
+	guest          = "guest"
 )
 
-func (s *service) StartRace(ctx context.Context, userId uuid.UUID) (*models.Single, error) {
-	//TODO implement me
+func (s *service) StartRace(ctx context.Context, userId string) (models.SingleResponse, error) {
+
+	var sgl models.SingleResponse
+	var userUUID uuid.UUID
+	var err error
+
+	if userId == guest {
+		sgl.RacerInfo.Avatar = "random_string_from_aws"
+		sgl.RacerInfo.Username = guest
+	} else {
+
+		userUUID, err = convertStrToUUID(userId)
+		if err != nil {
+			return sgl, fmt.Errorf("convert to uuid %v:%w", userUUID, err)
+		}
+
+		racerInfo, err := s.repo.Starter.RacerInfo(ctx, userUUID)
+		if err != nil {
+			return sgl, fmt.Errorf("%v:%w", racerInfo, err)
+		}
+
+		sgl.RacerInfo = racerInfo
+	}
+
 	newRaceID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, err
+		return sgl, fmt.Errorf("unable to start single race session due to %w", err)
 	}
-	single, err := s.repo.Starter.StartSingle(ctx, userId, newRaceID)
+
+	text, err := s.repo.Starter.TextInfo(ctx)
 	if err != nil {
-		return nil, startRace
+		return sgl, fmt.Errorf("%w", err)
 	}
-	return single, nil
+
+	s.ids.raceUUID = newRaceID
+	s.ids.racerUUID = userUUID
+	s.ids.textUUID = text.TextID
+
+	sgl.TextInfo = text
+
+	return sgl, nil
 }
 
 func (s *service) EndRace(ctx context.Context, req *models.ReqEndSingle) (*models.RespEndSingle, error) {
@@ -90,12 +128,21 @@ func (s *service) RealTimeCalc(ctx context.Context, currentSymbol, duration int)
 	return int(countWPM(currentSymbol, duration)), nil
 }
 
-func (s *service) RacerExists(ctx context.Context, racerId uuid.UUID) (bool, error) {
-	exist, err := s.repo.Starter.RacerExist(ctx, racerId)
-	if err != nil {
-		log.Println(err)
-		return false, blah
+func (s *service) RacerExists(ctx context.Context, racerId string) (bool, error) {
+	if racerId == "guest" {
+		return true, nil
 	}
+
+	racerUUID, err := convertStrToUUID(racerId)
+	if err != nil {
+		return false, fmt.Errorf("%w", err)
+	}
+
+	exist, err := s.repo.Starter.RacerExist(ctx, racerUUID)
+	if err != nil {
+		return false, fmt.Errorf("%w", err)
+	}
+
 	return exist, nil
 }
 
@@ -121,4 +168,12 @@ func calculateStartTime(endTime time.Time, durationInSeconds int) time.Time {
 	// Subtract the duration from the end time to get the start time
 	startTime := endTime.Add(-time.Second * time.Duration(durationInSeconds))
 	return startTime
+}
+
+func convertStrToUUID(id string) (uuid.UUID, error) {
+	userUUID, err := uuid.Parse(id)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid user id: %w", err)
+	}
+	return userUUID, err
 }

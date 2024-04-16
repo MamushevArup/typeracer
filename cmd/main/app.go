@@ -28,13 +28,13 @@ func main() {
 		log.Fatalf("can't read .env %v", err)
 	}
 
-	cfg, err := config.NewConfig()
+	cfg, err := config.New()
 	if err != nil {
-		log.Fatalf("error with reading config %e", err)
+		log.Fatalf("error due to: %v", err)
 	}
 	// postgres://username:password@localhost:5432/database_name
 
-	lg := logger.NewLogger()
+	lg := logger.New()
 
 	db, err := psql.New(ctx, cfg)
 	if err != nil {

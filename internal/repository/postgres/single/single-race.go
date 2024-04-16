@@ -3,17 +3,22 @@ package single
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/pkg/logger"
+	"github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"math/big"
 )
 
 type Starter interface {
-	StartSingle(ctx context.Context, id, racerID uuid.UUID) (*models.Single, error)
+	RacerInfo(ctx context.Context, id uuid.UUID) (models.RacerInfo, error)
+	TextInfo(ctx context.Context) (models.TextInfo, error)
+
 	EndSingleRace(ctx context.Context, req *models.RespEndSingle) error
 	GetTextLen(ctx context.Context) (int, error)
 	RacerExist(ctx context.Context, id uuid.UUID) (bool, error)
@@ -25,8 +30,8 @@ type repo struct {
 	lg *logger.Logger
 }
 
-// NewSingle return instance of the implemented interface
-func NewSingle(lg *logger.Logger, db *pgxpool.Pool) Starter {
+// New return instance of the implemented interface
+func New(lg *logger.Logger, db *pgxpool.Pool) Starter {
 	return &repo{
 		db: db,
 		lg: lg,
@@ -40,84 +45,89 @@ type ids struct {
 
 var identifiers ids
 
-func (r *repo) StartSingle(ctx context.Context, userID, raceID uuid.UUID) (*models.Single, error) {
-	// Need to work with practice yourself section
-	// Modify text insert single update user
-	// prepare data to insert and then fetch the data from the database.
-	//create new single race id
-	single := new(models.Single)
+func (r *repo) RacerInfo(ctx context.Context, id uuid.UUID) (models.RacerInfo, error) {
+	var racer models.RacerInfo
 
-	single.ID = raceID
-	single.RacerID = userID
-	// using racer_id fetch the data related to the racer and
-	// with random uuid fetch the text.
-	begin, err := r.db.Begin(ctx)
+	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	query, args, err := sq.Select("username, avatar").From("racer").Where(squirrel.Eq{"id": id}).ToSql()
 	if err != nil {
-		r.lg.Errorf("can't start a transaction %v", err)
-		return nil, err
+		r.lg.Errorf("can't build query %v", err)
+		return racer, fmt.Errorf("can't build query %w", err)
 	}
-	// fetch data from random_text table and return one random
+
+	err = r.db.QueryRow(ctx, query, args...).Scan(&racer.Username, &racer.Avatar)
+	if err != nil {
+		return models.RacerInfo{}, fmt.Errorf("no rows found %w", err)
+	}
+
+	return racer, nil
+}
+
+func (r *repo) TextInfo(ctx context.Context) (models.TextInfo, error) {
+
+	var textInfo models.TextInfo
+
 	textUUID := r.randomText(ctx)
-	single.TextID = textUUID
-	identifiers.textId = textUUID
-	identifiers.raceId = raceID
-	// fetch data from racer table and place it in single
 
-	racer := `SELECT username, avatar FROM racer WHERE id = $1`
-	err = pgxscan.Get(ctx, begin, single, racer, userID)
-	if err != nil {
-		r.lg.Errorf("can't scan racer data %v", err)
-		return nil, err
-	}
 	// fetch data from text and contributor table and place it in single
-	text := `SELECT content, length, author, r.username as contributor_name
-			FROM racer r
-			    join text t on r.id = t.contributor_id 
-				where t.id=$1`
-	err = pgxscan.Get(ctx, begin, single, text, textUUID)
+	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	query := sq.Select("content, source, source_title, author, r.username as contributor_name").
+		From("racer r").
+		Join("text t on r.id = t.contributor_id").
+		Where("t.id = ?", textUUID)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return textInfo, fmt.Errorf("fatal in query building query is : %v fix: %w", sql, err)
+	}
+
+	err = pgxscan.Get(ctx, r.db, &textInfo, sql, args...)
 	if err != nil {
 		r.lg.Errorf("can't scan text data %v", err)
-		return nil, err
+		return textInfo, fmt.Errorf("query : %v, args : %v : %w", sql, args, err)
 	}
 
-	err = begin.Commit(ctx)
-	if err != nil {
-		err = begin.Rollback(ctx)
-		if err != nil {
-			r.lg.Errorf("can't rollback a transaction %v", err)
-			return nil, err
-		}
-		r.lg.Errorf("can't commit a transaction %v", err)
-		return nil, err
-	}
-	return single, nil
+	r.lg.Infof("text info %v", textInfo)
+	return textInfo, nil
 }
 
 func (r *repo) randomText(ctx context.Context) uuid.UUID {
 	var uuids []uuid.UUID
-	getRandom := fmt.Sprintf("SELECT * FROM random_text")
-	txUUIDS, err := r.db.Query(ctx, getRandom)
+
+	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	sql, _, err := sq.Select("*").From("random_text").ToSql()
 	if err != nil {
-		r.lg.Errorf("can't exec query random uuids %v", err)
-		return [16]byte{}
+		r.lg.Errorf("error constructing query %v, error %v", sql, err)
+		return uuid.Nil
 	}
+
+	txUUIDS, err := r.db.Query(ctx, sql)
+	if err != nil {
+		r.lg.Errorf("query failed due to %v", err)
+		return uuid.Nil
+	}
+
 	for txUUIDS.Next() {
 		var id uuid.UUID
 		if err = txUUIDS.Scan(&id); err != nil {
-			r.lg.Errorf("can't scan value in uuid's set %v", err)
+			r.lg.Errorf("can't scan uuid %v value in uuid's set %v", id, err)
 		}
+
 		uuids = append(uuids, id)
 	}
+
 	randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(uuids))))
 	if err != nil {
-		// Handle error (e.g., log, panic, return a default value)
-		r.lg.Errorf("can't randomize due to %v", err)
-		return [16]byte{}
+		r.lg.Errorf("unable randomize array %v due to %v", uuids, err)
+		return uuid.Nil
 
 	}
 
-	// Return the UUID at the randomly selected index
-	return uuids[randomIndex.Int64()]
+	random := randomIndex.Int64()
+	return uuids[random]
 }
 
 func (r *repo) EndSingleRace(ctx context.Context, resp *models.RespEndSingle) error {
@@ -163,11 +173,18 @@ func (r *repo) GetTextLen(ctx context.Context) (int, error) {
 
 func (r *repo) RacerExist(ctx context.Context, id uuid.UUID) (bool, error) {
 	var ex bool
+
 	query := "SELECT EXISTS(SELECT 1 FROM racer WHERE id = $1)"
+
 	err := r.db.QueryRow(ctx, query, id).Scan(&ex)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, fmt.Errorf("racer doesn't exist: %w", err)
+		}
+
 		r.lg.Errorf("can't execute use exist check %v", err)
-		return false, err
+		return false, fmt.Errorf("%w", err)
 	}
+
 	return ex, nil
 }

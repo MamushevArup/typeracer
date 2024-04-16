@@ -39,8 +39,8 @@ func (h *handler) InitRoutes() *gin.Engine {
 		sgl.POST("/curr-wpm", h.currWPM)
 	}
 
-	router.POST("/contribute", h.contribute)
-	router.GET("/moderation/:id", h.moderation)
+	//router.POST("/contribute", h.contribute)
+	//router.GET("/moderation/:id", h.moderation)
 
 	auth := router.Group("/api/auth")
 	{

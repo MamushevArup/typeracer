@@ -13,7 +13,6 @@ import (
 var (
 	guest      = "guest"
 	authHeader = errors.New("auth header empty")
-	authInfo   = "authInfo"
 )
 
 type tokenClaims struct {

@@ -29,11 +29,11 @@ type Multiple struct {
 	Timer    int `yaml:"timer"`
 }
 
-func NewConfig() (*Config, error) {
+func New() (*Config, error) {
 	var cfg Config
 
 	if err := cleanenv.ReadConfig("config/config.yml", &cfg); err != nil {
-		return nil, fmt.Errorf("error with reading config files %v", err)
+		return nil, fmt.Errorf("unable read from config: %w", err)
 	}
 	return &cfg, nil
 }

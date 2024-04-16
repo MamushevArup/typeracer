@@ -20,25 +20,25 @@ const (
 )
 
 func (h *handler) createLink(c *gin.Context) {
-	id, _ := authHeader(c)
-
-	link, err := h.service.Link.Create(id.String())
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	text, err := h.service.Multiple.RandomText(c)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.Set("text_len", len(text))
-
-	c.JSON(http.StatusOK, gin.H{
-		"link":    link,
-		"content": text,
-	})
+	//id, _ := authHeader(c)
+	//
+	//link, err := h.service.Link.Create(id.String())
+	//if err != nil {
+	//	newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	//	return
+	//}
+	//text, err := h.service.Multiple.RandomText(c)
+	//if err != nil {
+	//	newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	//	return
+	//}
+	//
+	//c.Set("text_len", len(text))
+	//
+	//c.JSON(http.StatusOK, gin.H{
+	//	"link":    link,
+	//	"content": text,
+	//})
 }
 
 var upgrader = websocket.Upgrader{

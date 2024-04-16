@@ -11,7 +11,7 @@ import (
 )
 
 type Service struct {
-	PracticeY  single.PracticeY
+	Single     single.PracticeY
 	Contribute contribute.Contributor
 	Auth       auth.Auth
 	Multiple   race.Racer
@@ -20,7 +20,7 @@ type Service struct {
 
 func NewService(repo *repository.Repo, cfg *config.Config) *Service {
 	return &Service{
-		PracticeY:  single.NewPracticeY(repo),
+		Single:     single.NewPracticeY(repo),
 		Contribute: contribute.NewContribute(repo),
 		Auth:       auth.NewAuth(repo),
 		Multiple:   race.NewMultiple(repo, cfg),
