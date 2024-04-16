@@ -5,21 +5,26 @@ import (
 	"time"
 )
 
+// EndRace models
+
 type RespEndSingle struct {
 	RacerId     uuid.UUID `json:"-"`
 	Wpm         int       `json:"wpm" db:"speed"`
 	Accuracy    float64   `json:"accuracy" db:"accuracy"`
 	Duration    int       `json:"duration" db:"duration"`
 	StartedTime time.Time `json:"-" db:"start_time"`
+	RaceId      uuid.UUID `json:"-" db:"id"`
+	TextId      uuid.UUID `json:"-" db:"text_id"`
 }
 
 type ReqEndSingle struct {
 	RacerId  uuid.UUID `json:"-"`
 	Duration int       `json:"duration"`
 	Errors   int       `json:"errors"`
+	Length   int       `json:"length"`
 }
 
-// SingleResponse starts race
+// SingleResponse starts race accumulates two structs RacerInfo and TextInfo
 type SingleResponse struct {
 	RacerInfo `json:"racer"`
 	TextInfo  `json:"text"`

@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	_ "github.com/MamushevArup/typeracer/docs"
 	validation "github.com/MamushevArup/typeracer/internal/middleware/auth/http/token-validation"
 	validationWs "github.com/MamushevArup/typeracer/internal/middleware/auth/ws/token-ws"
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 func NewHandler(service *services.Service) Handler {
@@ -29,6 +32,8 @@ func (h *handler) InitRoutes() *gin.Engine {
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.Use(validation.TokenInspector())
 

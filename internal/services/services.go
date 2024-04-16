@@ -11,7 +11,7 @@ import (
 )
 
 type Service struct {
-	Single     single.PracticeY
+	Single     single.Practice
 	Contribute contribute.Contributor
 	Auth       auth.Auth
 	Multiple   race.Racer

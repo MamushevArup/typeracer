@@ -1,15 +1,24 @@
 package handlers
 
 import (
-	"context"
-	"encoding/json"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
 )
 
-// TODO implement swagger docs
+// @Summary Start a new race
+// @Tags single
+// @Description This endpoint is used to start a new race for a racer.
+// @ID start-race
+// @Accept  json
+// @Produce  json
+// @Success 201 {object} models.SingleResponse
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security Bearer
+// @Router  /single/race [get]
 func (h *handler) startRace(c *gin.Context) {
 
 	id, ex := c.Get("ID")
@@ -37,7 +46,28 @@ func (h *handler) startRace(c *gin.Context) {
 	c.JSON(http.StatusCreated, race)
 }
 
-// TODO implement swagger docs
+type midRace struct {
+	CurrIdx  int `json:"index"`
+	Duration int `json:"duration"`
+}
+
+type speed struct {
+	Wpm int `json:"wpm"`
+}
+
+// @Summary Calculate current Words Per Minute (WPM)
+// @Tags single
+// @Description This endpoint is used to calculate the current WPM for a racer.
+// @ID curr-wpm
+// @Accept  json
+// @Produce  json
+// @Param 	midRace 	body 	midRace 	true 	"Wpm calculation"
+// @Success 201 {object} speed
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security Bearer
+// @Router  /single/curr-wpm [post]
 func (h *handler) currWPM(c *gin.Context) {
 
 	id, ex := c.Get("ID")
@@ -47,31 +77,25 @@ func (h *handler) currWPM(c *gin.Context) {
 		id = role
 	}
 
-	var curr struct {
-		CurrIdx  int `json:"index"`
-		Duration int `json:"duration"`
-	}
-	var resp struct {
-		Wpm int `json:"wpm"`
-	}
+	var m midRace
 
-	if err := c.BindJSON(&curr); err != nil {
+	if err := c.BindJSON(&m); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
 	// Perform other validations as needed
-	if curr.Duration < 0 {
+	if m.Duration < 0 {
 		newErrorResponse(c, http.StatusBadRequest, "duration must be non-negative")
 		return
 	}
 
-	if curr.CurrIdx <= 0 {
+	if m.CurrIdx <= 0 {
 		newErrorResponse(c, http.StatusBadRequest, "index must be non-negative or not zero")
 		return
 	}
 
-	ex, err := h.service.Single.RacerExists(context.Background(), id.(string))
+	ex, err := h.service.Single.RacerExists(c, id.(string))
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -81,21 +105,40 @@ func (h *handler) currWPM(c *gin.Context) {
 		return
 	}
 
-	calc, err := h.service.Single.RealTimeCalc(context.Background(), curr.CurrIdx, curr.Duration)
+	calc, err := h.service.Single.RealTimeCalc(c, m.CurrIdx, m.Duration)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	
-	resp.Wpm = calc
-	c.JSON(http.StatusCreated, &resp)
+	var s speed
+
+	s.Wpm = calc
+	c.JSON(http.StatusCreated, &s)
 }
 
+// @Summary End a race
+// @Tags single
+// @Description This endpoint is used to end a race for a racer.
+// @ID end-race
+// @Accept  json
+// @Produce  json
+// @Param   reqEndSingle     body    models.ReqEndSingle     true        "End Race"
+// @Success 201 {object} models.RespEndSingle
+// @Failure 400 {object} errorResponse
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security Bearer
+// @Router  /single/end-race [post]
 func (h *handler) endRace(c *gin.Context) {
 
-	//racerUUID, _ := authHeader(c)
+	var req models.ReqEndSingle
 
-	var req *models.ReqEndSingle
+	id, ex := c.Get("ID")
+	role := c.MustGet("Role")
+
+	if !ex {
+		id = role
+	}
 
 	if err := c.BindJSON(&req); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid message body")
@@ -113,7 +156,7 @@ func (h *handler) endRace(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.Single.RacerExists(context.Background(), uuid.Nil.String())
+	ex, err := h.service.Single.RacerExists(c, id.(string))
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -122,27 +165,20 @@ func (h *handler) endRace(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
 		return
 	}
-	req.RacerId = uuid.Nil
+
+	uid, err := uuid.Parse(id.(string))
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	req.RacerId = uid
+
 	race, err := h.service.Single.EndRace(c, req)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	var endRace struct {
-		Wpm      int     `json:"wpm" db:"speed"`
-		Accuracy float64 `json:"accuracy" db:"accuracy"`
-		Duration int     `json:"duration" db:"duration"`
-	}
 
-	end, err := json.Marshal(race)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	err = json.Unmarshal(end, &endRace)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	c.JSON(http.StatusCreated, &endRace)
+	c.JSON(http.StatusCreated, &race)
 }

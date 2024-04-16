@@ -19,6 +19,16 @@ const (
 	contextTimeout = 4 * time.Second
 )
 
+// @title Typeracer Game clone API
+// @version 1.0
+// @description API for typeracer game clone. Typeracer popular game where users improve their typing skills in interactive format
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+
+// @host localhost:1001
+// @schemes http
 func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)

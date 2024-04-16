@@ -1,0 +1,383 @@
+definitions:
+  handlers.authResponse:
+    properties:
+      access:
+        type: string
+    type: object
+  handlers.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.midRace:
+    properties:
+      duration:
+        type: integer
+      index:
+        type: integer
+    type: object
+  handlers.refreshS:
+    properties:
+      fingerprint:
+        type: string
+    type: object
+  handlers.signIn:
+    properties:
+      email:
+        type: string
+      fingerprint:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.signUp:
+    properties:
+      email:
+        type: string
+      fingerprint:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.speed:
+    properties:
+      wpm:
+        type: integer
+    type: object
+  models.RacerInfo:
+    properties:
+      avatar:
+        type: string
+      username:
+        type: string
+    type: object
+  models.RacerM:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  models.ReqEndSingle:
+    properties:
+      duration:
+        type: integer
+      errors:
+        type: integer
+      length:
+        type: integer
+    type: object
+  models.RespEndSingle:
+    properties:
+      accuracy:
+        type: number
+      duration:
+        type: integer
+      wpm:
+        type: integer
+    type: object
+  models.SingleResponse:
+    properties:
+      racer:
+        $ref: '#/definitions/models.RacerInfo'
+      text:
+        $ref: '#/definitions/models.TextInfo'
+    type: object
+  models.TextInfo:
+    properties:
+      content:
+        description: content is actual text
+        type: string
+      contributor_name:
+        description: who contributed the content
+        type: string
+      header:
+        description: header the title of the text. Ex name of the book, song
+        type: string
+      source:
+        description: source from what it is coming. It can be from a book, article,
+          etc.
+        type: string
+      text_author:
+        description: who wrote the content
+        type: string
+    type: object
+host: localhost:1001
+info:
+  contact: {}
+  description: API for typeracer game clone. Typeracer popular game where users improve
+    their typing skills in interactive format
+  title: Typeracer Game clone API
+  version: "1.0"
+paths:
+  /api/auth/logout:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint is used for user logout.
+      operationId: log-out
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Log out
+      tags:
+      - auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used to refresh the access token.
+      operationId: refresh
+      parameters:
+      - description: Refresh
+        in: body
+        name: refreshS
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.refreshS'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.authResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Refresh token
+      tags:
+      - auth
+  /api/auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used for user authentication.
+      operationId: sign-in
+      parameters:
+      - description: Sign In
+        in: body
+        name: signIn
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.signIn'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.authResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Sign in
+      tags:
+      - auth
+  /api/auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used for user registration.
+      operationId: sign-up
+      parameters:
+      - description: Sign Up
+        in: body
+        name: signUp
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.signUp'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.authResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Sign up
+      tags:
+      - auth
+  /api/multiple/race-track/{link}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint is used to join a race track. It upgrades the HTTP
+        connection to a WebSocket connection. The server sends messages with the current
+        race status to the client over the WebSocket connection.
+      operationId: race-track
+      parameters:
+      - description: Race Link
+        in: path
+        name: link
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RacerM'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Join a race track
+      tags:
+      - multiple
+  /single/curr-wpm:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used to calculate the current WPM for a racer.
+      operationId: curr-wpm
+      parameters:
+      - description: Wpm calculation
+        in: body
+        name: midRace
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.midRace'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.speed'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Calculate current Words Per Minute (WPM)
+      tags:
+      - single
+  /single/end-race:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used to end a race for a racer.
+      operationId: end-race
+      parameters:
+      - description: End Race
+        in: body
+        name: reqEndSingle
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReqEndSingle'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.RespEndSingle'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: End a race
+      tags:
+      - single
+  /single/race:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint is used to start a new race for a racer.
+      operationId: start-race
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.SingleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Start a new race
+      tags:
+      - single
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

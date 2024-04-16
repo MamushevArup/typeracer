@@ -46,6 +46,18 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// @Summary Join a race track
+// @Tags multiple
+// @Description This endpoint is used to join a race track. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.
+// @ID race-track
+// @Accept  json
+// @Produce  json
+// @Param   link     path    string     true        "Race Link"
+// @Success 200 {object} models.RacerM
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router  /api/multiple/race-track/{link} [get]
 func (h *handler) raceTrack(c *gin.Context) {
 
 	link := c.Param("link")
