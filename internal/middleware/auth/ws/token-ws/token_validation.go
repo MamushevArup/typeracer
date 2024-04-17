@@ -1,7 +1,6 @@
 package token_ws
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
@@ -10,9 +9,7 @@ import (
 )
 
 var (
-	guest      = "guest"
-	authHeader = errors.New("auth header empty")
-	authInfo   = "authInfo"
+	guest = "guest"
 )
 
 type tokenClaims struct {

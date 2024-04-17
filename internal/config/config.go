@@ -12,10 +12,11 @@ type Config struct {
 }
 
 type HttpServer struct {
-	Port        string `yaml:"port"`
-	Host        string `yaml:"host"`
-	Timeout     string `yaml:"timeout"`
-	IdleTimeout string `yaml:"idle_timeout"`
+	Port          string `yaml:"port"`
+	Host          string `yaml:"host"`
+	Timeout       string `yaml:"timeout"`
+	IdleTimeout   string `yaml:"idle_timeout"`
+	HeaderTimeout string `yaml:"header_timeout"`
 }
 type Postgres struct {
 	Port     string `yaml:"port"`

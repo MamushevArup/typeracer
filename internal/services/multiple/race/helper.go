@@ -2,10 +2,11 @@ package race
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/google/uuid"
-	"math/rand"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -42,7 +43,14 @@ func randomize(ids []uuid.UUID) uuid.UUID {
 		return uuid.Nil
 	}
 
-	return ids[rand.Intn(len(ids))] // Select a random UUID from the slice
+	bigIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(ids))))
+	if err != nil {
+		return uuid.Nil
+	}
+
+	index := int(bigIndex.Int64())
+
+	return ids[index]
 }
 
 func inputValidation(racer *models.RacerCurrentWpm, textLen int) error {

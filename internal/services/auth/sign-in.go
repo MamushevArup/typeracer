@@ -13,7 +13,6 @@ import (
 func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error) {
 
 	var r models.RacerAuth
-
 	// to generalize all password and email will store in lowercase
 	password = strings.ToLower(password)
 	email = strings.ToLower(email)

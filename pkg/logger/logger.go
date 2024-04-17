@@ -20,7 +20,10 @@ func (hook *writerHook) Fire(entry *logrus.Entry) error {
 		return err
 	}
 	for _, w := range hook.Writer {
-		w.Write([]byte(line))
+		_, err = w.Write([]byte(line))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -51,12 +54,12 @@ func init() {
 		FullTimestamp: true,
 	}
 
-	err := os.MkdirAll("logs", 0644)
+	err := os.MkdirAll("logs", 0750)
 	if err != nil {
 		panic(err)
 	}
 
-	allFile, err := os.OpenFile("logs/all.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+	allFile, err := os.OpenFile("logs/all.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -71,4 +74,5 @@ func init() {
 	l.SetLevel(logrus.TraceLevel)
 
 	e = logrus.NewEntry(l)
+
 }

@@ -1,8 +1,9 @@
 http_server:
   port: 1001
   host: localhost
-  timeout: 4s
-  idle_timeout: 60s
+  timeout: 4
+  idle_timeout: 60
+  header_timeout: 5
 postgres:
   port: 5432
   host: localhost

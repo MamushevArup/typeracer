@@ -1,0 +1,41 @@
+run:
+  timeout: 5m
+  issues-exit-code: 5
+  allow-parallel-runners: true
+  allow-serial-runners: true
+
+output:
+  formats:
+    - format: colored-line-number
+  path: stdout
+  show-stats: true
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - staticcheck
+    - unused
+    - goconst
+    - gofmt
+    - gosec
+    - nestif
+    - rowserrcheck
+    - unconvert
+linter-settings:
+  errcheck:
+    check-blank: true
+  govet:
+    check-shadowing: true
+  gosec:
+    severity: medium
+    confidence: high
+    no-fail: false
+
+issues:
+  exclude-use-default: false
+  exclude-dirs:
+    - /schema
+    - /docs

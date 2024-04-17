@@ -69,7 +69,6 @@ func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprin
 
 func (a *auth) CheckUserSignUp(ctx context.Context, email, password string) error {
 	// check user exist if so redirect to the sign in else generate token
-	password = strings.ToLower(password)
 	email = strings.ToLower(email)
 
 	byEmail, err := a.repo.Auth.UserByEmail(ctx, email)

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/handlers"
+	"github.com/MamushevArup/typeracer/internal/lib/http/server"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/pkg/logger"
@@ -12,6 +14,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -32,7 +36,9 @@ const (
 func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
-	defer cancel()
+	defer func() {
+		cancel()
+	}()
 
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("can't read .env %v", err)
@@ -67,11 +73,31 @@ func main() {
 	// deactivate link under 1 hour usage go to the database every <duration>
 	go svc.Link.Kill(time.NewTicker(10 * time.Second))
 
-	if err = http.ListenAndServe(":"+cfg.HttpServer.Port, handler.InitRoutes()); err != nil {
-		lg.Errorf("unable to create a connection %v", err)
-		os.Exit(1)
+	srv := server.Http(handler, cfg)
+
+	go func() {
+		if err = srv.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
+			lg.Errorf("unable to create a connection %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Setting up signal capturing
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// Waiting for SIGINT (pkill -2)
+	<-stop
+
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer func() {
+		// extra handling here
+		cancel()
+	}()
+
+	if err = srv.Shutdown(ctxShutDown); err != nil {
+		lg.Errorf("unable to shutdown server %v", err)
 	}
 
-	select {}
-
+	lg.Info("Server stopped")
 }

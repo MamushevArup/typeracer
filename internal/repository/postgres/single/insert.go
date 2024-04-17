@@ -37,6 +37,11 @@ func (r *repo) EndSingleRace(ctx context.Context, resp models.RespEndSingle) err
 		Columns("single_id", "racer_id", "text_id").
 		Values(resp.RaceId, resp.RacerId, resp.TextId).ToSql()
 
+	if err != nil {
+		r.lg.Errorf("failed to build query %v, user_id=%v", err, resp.RacerId)
+		return fmt.Errorf("failed to build query %w", err)
+	}
+
 	_, err = begin.Exec(ctx, sql, args...)
 	if err != nil {
 		r.lg.Errorf("fail insert race_history user_id=%v, err: %v", resp.RacerId, err)
