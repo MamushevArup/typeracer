@@ -46,15 +46,6 @@ func (h *handler) startRace(c *gin.Context) {
 	c.JSON(http.StatusCreated, race)
 }
 
-type midRace struct {
-	CurrIdx  int `json:"index"`
-	Duration int `json:"duration"`
-}
-
-type speed struct {
-	Wpm int `json:"wpm"`
-}
-
 // @Summary Calculate current Words Per Minute (WPM)
 // @Tags single
 // @Description This endpoint is used to calculate the current WPM for a racer.
@@ -77,20 +68,20 @@ func (h *handler) currWPM(c *gin.Context) {
 		id = role
 	}
 
-	var m midRace
+	var wpmCounter models.CountWpm
 
-	if err := c.BindJSON(&m); err != nil {
+	if err := c.BindJSON(&wpmCounter); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
 	// Perform other validations as needed
-	if m.Duration < 0 {
+	if wpmCounter.Duration < 0 {
 		newErrorResponse(c, http.StatusBadRequest, "duration must be non-negative")
 		return
 	}
 
-	if m.CurrIdx <= 0 {
+	if wpmCounter.CurrIdx <= 0 {
 		newErrorResponse(c, http.StatusBadRequest, "index must be non-negative or not zero")
 		return
 	}
@@ -105,15 +96,16 @@ func (h *handler) currWPM(c *gin.Context) {
 		return
 	}
 
-	calc, err := h.service.Single.RealTimeCalc(c, m.CurrIdx, m.Duration)
+	calc, err := h.service.Single.RealTimeCalc(c, wpmCounter.CurrIdx, wpmCounter.Duration)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	var s speed
+	var count models.Speed
 
-	s.Wpm = calc
-	c.JSON(http.StatusCreated, &s)
+	count.Wpm = calc
+
+	c.JSON(http.StatusCreated, count)
 }
 
 // @Summary End a race

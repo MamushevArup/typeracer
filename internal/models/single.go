@@ -48,3 +48,12 @@ type RacerInfo struct {
 	Username string `json:"username" db:"username"`
 	Avatar   string `json:"avatar" db:"avatar"`
 }
+
+type CountWpm struct {
+	CurrIdx  int `json:"index"`
+	Duration int `json:"duration"`
+}
+
+type Speed struct {
+	Wpm int `json:"wpm"`
+}

@@ -41,7 +41,7 @@ type RaceResult struct {
 	RacerId  uuid.UUID `json:"racer_id"`
 	Email    string    `json:"email"`
 	Place    int       `json:"place"`
-	Accuracy int       `json:"accuracy"`
+	Accuracy float64   `json:"accuracy"`
 	Time     int       `json:"time"`
 	Wpm      int       `json:"wpm"`
 }
@@ -60,10 +60,15 @@ type RacerRepoM struct {
 	RacerId       uuid.UUID `db:"racer_id"`
 	Duration      int       `db:"duration"`
 	Wpm           int       `db:"wpm"`
-	Accuracy      int       `db:"accuracy"`
+	Accuracy      float64   `db:"accuracy"`
 	StartTime     time.Time `db:"start_time"`
 	// winner is string due to the fact that we can have a guest racer which win the race
 	Winner    string `db:"winner"`
 	Place     int    `db:"place"`
 	TrackSize int    `db:"track_size"`
+}
+
+type LinkCreation struct {
+	Link    uuid.UUID `json:"link"`
+	Content string    `json:"content"`
 }

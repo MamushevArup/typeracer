@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/services/multiple/race"
 	"github.com/gin-gonic/gin"
@@ -12,33 +12,54 @@ import (
 	"net/http"
 )
 
-// all validation will make here
 const (
+	// switch case to define a type messages I get during ws connection. Used to calculate the current speed of the racer
 	currSpeed = iota + 1
+	// switch case to define type messages I get during ws connection. Used to finish the race
 	endRace
-	leaveRace
 )
 
+// createLink unique uuid link for the racetrack. Can lift up to 5 racer for now
+// @Summary Create a racetrack
+// @Tags multiple
+// @Description This endpoint is used to create a racetrack. It generates a unique link for the racetrack and returns it to the user.
+// @ID create-racetrack
+// @Accept  json
+// @Produce  json
+// @Success 201 {object} models.LinkCreation
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router /track/link [post]
 func (h *handler) createLink(c *gin.Context) {
-	//id, _ := authHeader(c)
-	//
-	//link, err := h.service.Link.Create(id.String())
-	//if err != nil {
-	//	newErrorResponse(c, http.StatusInternalServerError, err.Error())
-	//	return
-	//}
-	//text, err := h.service.Multiple.RandomText(c)
-	//if err != nil {
-	//	newErrorResponse(c, http.StatusInternalServerError, err.Error())
-	//	return
-	//}
-	//
-	//c.Set("text_len", len(text))
-	//
-	//c.JSON(http.StatusOK, gin.H{
-	//	"link":    link,
-	//	"content": text,
-	//})
+
+	// get value from global auth middleware parsing access token and if token empty user is guest
+	id, ex := c.Get("ID")
+	role := c.MustGet("Role")
+	if !ex {
+		id = role
+	}
+
+	link, err := h.service.Link.Create(c, id.(string))
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	text, err := h.service.Multiple.RandomText(c, id.(string))
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Set("text_len", len(text))
+
+	linkResult := models.LinkCreation{
+		Link:    link,
+		Content: text,
+	}
+
+	c.JSON(http.StatusCreated, linkResult)
 }
 
 var upgrader = websocket.Upgrader{
@@ -46,10 +67,10 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// @Summary Join a race track
+// @Summary Join a racetrack
 // @Tags multiple
-// @Description This endpoint is used to join a race track. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.
-// @ID race-track
+// @Description This endpoint is used to join a racetrack. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.
+// @ID racetrack
 // @Accept  json
 // @Produce  json
 // @Param   link     path    string     true        "Race Link"
@@ -57,21 +78,19 @@ var upgrader = websocket.Upgrader{
 // @Failure 400 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Security ApiKeyAuth
-// @Router  /api/multiple/race-track/{link} [get]
+// @Router  /track/race/{link} [get]
 func (h *handler) raceTrack(c *gin.Context) {
 
 	link := c.Param("link")
 
 	role := c.MustGet("Role")
-
 	id, ex := c.Get("ID")
 	if !ex {
 		id = role
 	}
 
-	err := h.service.Link.Check(context.TODO(), link)
+	err := h.service.Link.Check(c, link)
 	if err != nil {
-		log.Println(err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -84,8 +103,11 @@ func (h *handler) raceTrack(c *gin.Context) {
 
 	connections, _ := h.joinRacers(conn, link, id.(string))
 
+	// channels to receive messages from the client to calculate the current speed of the racer
 	currSpeedCh := make(chan models.RacerSpeed)
+	// channels to receive messages from the client to finish race
 	endRaceResult := make(chan models.RaceResult)
+	// channel to receive errors
 	errorCh := make(chan error)
 
 	go func() {
@@ -95,7 +117,7 @@ func (h *handler) raceTrack(c *gin.Context) {
 			err = conn.ReadJSON(&msgType.Data)
 			if err != nil {
 				log.Println(err)
-				return
+				errorCh <- fmt.Errorf("error during parse body try again %w", err)
 			}
 
 			data, ok := msgType.Data.(map[string]interface{})
@@ -118,12 +140,12 @@ func (h *handler) raceTrack(c *gin.Context) {
 
 				err = mapstructure.Decode(data, &racerSpeed)
 				if err != nil {
-					errorCh <- err
+					errorCh <- fmt.Errorf("error during parse body try again %w", err)
 				}
 
 				currWpm, err := h.service.Multiple.CurrentSpeed(&racerSpeed, c.GetInt("text_len"))
 				if err != nil {
-					errorCh <- err
+					errorCh <- fmt.Errorf("fail to calculate current speed for user %v, err=%w", racerSpeed.Email, err)
 				} else {
 					currSpeedCh <- currWpm
 				}
@@ -134,19 +156,19 @@ func (h *handler) raceTrack(c *gin.Context) {
 
 				err = mapstructure.Decode(data, &raceEnd)
 				if err != nil {
-					errorCh <- err
+					errorCh <- fmt.Errorf("error during parse body try again %w", err)
 				}
 
 				raceResult, err := h.service.Multiple.EndRace(raceEnd, link, id.(string))
 				if err != nil {
-					errorCh <- err
+					errorCh <- fmt.Errorf("fail to calculate current speed for user %v, err=%w", raceResult.Email, err)
 				} else {
 					endRaceResult <- raceResult
 				}
 
 			default:
 				log.Println("Invalid type value")
-				writeMessage(connections, map[string]interface{}{"error": "Invalid type value"})
+				errorCh <- fmt.Errorf("invalid type value %v user=%v", typeValue, id.(string))
 				return
 			}
 		}
@@ -168,15 +190,6 @@ func (h *handler) raceTrack(c *gin.Context) {
 					writeMessage(connections, map[string]interface{}{"error": v.Error()})
 				}
 			}
-			//for m := range currSpeedCh {
-			//	writeMessage(connections, m)
-			//}
-			//for err := range errorCh {
-			//	writeMessage(connections, map[string]interface{}{"error": err.Error()})
-			//}
-			//for r := range endRaceResult {
-			//	writeMessage(connections, r)
-			//}
 		}
 	}()
 
@@ -189,16 +202,19 @@ func (h *handler) joinRacers(conn *websocket.Conn, link, id string) (*[]*websock
 	connections, racer, err := h.service.Multiple.Join(id, conn, link)
 	if err != nil {
 		writeMessage(connections, map[string]interface{}{"error": err.Error()})
+
 		log.Println(err)
 		return connections, racer
 	}
 
 	writeMessage(connections, racer)
+
 	return connections, racer
 }
 
 func (h *handler) timerSender(link string, connections *[]*websocket.Conn) chan struct{} {
 
+	// sent signal to the main goroutine when the timer is over to start race
 	signal := make(chan struct{})
 
 	go func() {
@@ -210,18 +226,19 @@ func (h *handler) timerSender(link string, connections *[]*websocket.Conn) chan 
 					continue
 				}
 
-				err2 := h.service.Multiple.WhiteLine(context.TODO(), link)
+				err2 := h.service.Multiple.WhiteLine(link)
 				if err2 != nil {
 					log.Println(err2.Error())
 					return
 				}
+
 				// when timer is over, and we save it in the database
 				signal <- struct{}{}
 				log.Println(err.Error())
 				return
 			}
 
-			writeMessage(connections, map[string]interface{}{"timer": t, "type": "timer"})
+			writeMessage(connections, map[string]interface{}{"timer": t, "type": 0})
 		}
 	}()
 
@@ -230,13 +247,13 @@ func (h *handler) timerSender(link string, connections *[]*websocket.Conn) chan 
 
 func writeMessage(connections *[]*websocket.Conn, message interface{}) {
 
-	if *connections == nil {
+	if connections == nil {
 		return
 	}
 
 	sentClients := make(map[*websocket.Conn]bool)
-
 	for _, clientConn := range *connections {
+
 		if _, sent := sentClients[clientConn]; !sent {
 			// Send the message to the writer goroutine
 			err := clientConn.WriteJSON(message)
@@ -244,7 +261,9 @@ func writeMessage(connections *[]*websocket.Conn, message interface{}) {
 				log.Println(err)
 				return
 			}
+
 			sentClients[clientConn] = true
 		}
+
 	}
 }

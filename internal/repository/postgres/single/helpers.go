@@ -75,17 +75,16 @@ func (r *repo) RacerExist(ctx context.Context, id uuid.UUID) (bool, error) {
 	var ex bool
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-	sql, args, err := sq.
+	sql, _, err := sq.
 		Select("EXISTS(SELECT 1 FROM racer WHERE id = ?)").
-		From("racer").
-		Where("id = ?", id).
 		ToSql()
 
 	if err != nil {
+		r.lg.Errorf("can't build query %v", err)
 		return false, fmt.Errorf("failed to build query %w user_id=%v", err, id)
 	}
 
-	err = r.db.QueryRow(ctx, sql, args...).Scan(&ex)
+	err = r.db.QueryRow(ctx, sql, id).Scan(&ex)
 	if err != nil {
 		r.lg.Errorf("can't execute use exist check %v", err)
 		return false, fmt.Errorf("racer doesn't exist %w", err)

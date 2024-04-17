@@ -10,10 +10,10 @@ import (
 )
 
 type Racer interface {
-	RandomText(ctx context.Context) (string, error)
+	RandomText(ctx context.Context, id string) (string, error)
 	Join(token string, conn *websocket.Conn, link string) (*[]*websocket.Conn, models.RacerM, error)
 	Timer(link string, cons *[]*websocket.Conn) (int, error)
-	WhiteLine(ctx context.Context, link string) error
+	WhiteLine(link string) error
 	CurrentSpeed(racer *models.RacerCurrentWpm, textLen int) (models.RacerSpeed, error)
 	EndRace(raceReq models.RaceEndRequest, link, id string) (models.RaceResult, error)
 }

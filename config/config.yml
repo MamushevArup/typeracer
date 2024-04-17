@@ -11,4 +11,3 @@ postgres:
 multiple:
   timer: 20
   max_racers: 5
-

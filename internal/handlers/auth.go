@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	symbol        = errors.New("password must contain at least one special symbol, one character and one digit")
 	mail          = errors.New("invalid email format")
 	emptyUsername = errors.New("username cannot be empty")
 	emailRegex    = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
@@ -76,7 +75,8 @@ func (h *handler) signIn(c *gin.Context) {
 	a.Access = access
 
 	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
-	c.JSON(http.StatusCreated, &a)
+
+	c.JSON(http.StatusOK, a)
 }
 
 // @Summary Sign up
@@ -123,16 +123,16 @@ func (h *handler) signUp(c *gin.Context) {
 	a.Access = access
 
 	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
-	c.JSON(http.StatusCreated, &a)
+	c.JSON(http.StatusCreated, a)
 }
 
 func emailAndPasswdValidation(email, password string) error {
 	var (
-		minLen    = 6
-		maxLen    = 15
-		hasDigit  bool
-		hasChar   bool
-		hasSymbol bool
+		minLen = 6
+		maxLen = 15
+		digit  = `\d`
+		char   = `[A-Za-z]`
+		symbol = `[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]`
 	)
 	if !regexp.MustCompile(emailRegex).MatchString(email) {
 		return mail
@@ -143,20 +143,14 @@ func emailAndPasswdValidation(email, password string) error {
 		return fmt.Errorf("password length must be between %d and %d characters", minLen, maxLen)
 	}
 
-	// Check password composition
-	for _, char := range password {
-		switch {
-		case '0' <= char && char <= '9':
-			hasDigit = true
-		case 'a' <= char && char <= 'z', 'A' <= char && char <= 'Z':
-			hasChar = true
-		case char == '!' || char == '@' || char == '#' || char == '$' || char == '%' || char == '^' || char == '&':
-			hasSymbol = true
-		}
-	}
+	hasDigit := regexp.MustCompile(digit).MatchString(password)
+	hasChar := regexp.MustCompile(char).MatchString(password)
+	hasSymbol := regexp.MustCompile(symbol).MatchString(password)
+
 	if !hasDigit || !hasChar || !hasSymbol {
-		return symbol
+		return fmt.Errorf("password must contain at least one character, one digit, and one symbol")
 	}
+
 	return nil
 }
 
@@ -219,5 +213,5 @@ func (h *handler) refresh(c *gin.Context) {
 	a.Access = access
 
 	c.SetCookie("refresh_token", refresh, maxAge, "/api/auth", "localhost", false, true)
-	c.JSON(http.StatusCreated, &a)
+	c.JSON(http.StatusCreated, a)
 }
