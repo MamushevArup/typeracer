@@ -6,11 +6,33 @@ import (
 	"github.com/MamushevArup/typeracer/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
 
 func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error) {
+
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
+	if email == adminUsername && password == adminPassword {
+		access, err := a.generateAccessToken("1", "admin")
+		if err != nil {
+			return "", "", fmt.Errorf("%w", err)
+		}
+		refresh, err := a.generateRefreshToken()
+		if err != nil {
+			return "", "", fmt.Errorf("%w", err)
+		}
+
+		err = a.repo.Auth.UpdateAdmin(ctx, adminUsername, refresh)
+		if err != nil {
+			return "", "", fmt.Errorf("%w", err)
+		}
+
+		return access, refresh, nil
+	}
 
 	var r models.RacerAuth
 	// to generalize all password and email will store in lowercase

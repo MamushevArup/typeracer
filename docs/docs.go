@@ -60,7 +60,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "This endpoint is used to refresh the access token.",
+                "description": "This endpoint is used to refresh the endpoint token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -75,11 +75,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Refresh",
-                        "name": "refreshS",
+                        "name": "models.RefreshS",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.refreshS"
+                            "$ref": "#/definitions/models.RefreshS"
                         }
                     }
                 ],
@@ -87,7 +87,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handlers.authResponse"
+                            "$ref": "#/definitions/models.AuthResponse"
                         }
                     },
                     "400": {
@@ -122,11 +122,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Sign In",
-                        "name": "signIn",
+                        "name": "models.SignIn",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.signIn"
+                            "$ref": "#/definitions/models.SignIn"
                         }
                     }
                 ],
@@ -134,7 +134,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handlers.authResponse"
+                            "$ref": "#/definitions/models.AuthResponse"
                         }
                     },
                     "400": {
@@ -169,11 +169,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Sign Up",
-                        "name": "signUp",
+                        "name": "models.SignUp",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.signUp"
+                            "$ref": "#/definitions/models.SignUp"
                         }
                     }
                 ],
@@ -181,57 +181,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handlers.authResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/multiple/race-track/{link}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "This endpoint is used to join a race track. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "multiple"
-                ],
-                "summary": "Join a race track",
-                "operationId": "race-track",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Race Link",
-                        "name": "link",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.RacerM"
+                            "$ref": "#/definitions/models.AuthResponse"
                         }
                     },
                     "400": {
@@ -271,11 +221,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Wpm calculation",
-                        "name": "midRace",
+                        "name": "models.CountWpm",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.midRace"
+                            "$ref": "#/definitions/models.CountWpm"
                         }
                     }
                 ],
@@ -283,7 +233,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handlers.speed"
+                            "$ref": "#/definitions/models.Speed"
                         }
                     },
                     "400": {
@@ -329,7 +279,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "End Race",
-                        "name": "reqEndSingle",
+                        "name": "models.ReqEndSingle",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -411,17 +361,100 @@ const docTemplate = `{
                     }
                 }
             }
-        }
-    },
-    "definitions": {
-        "handlers.authResponse": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "string"
+        },
+        "/track/link": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This endpoint is used to create a racetrack. It generates a unique link for the racetrack and returns it to the user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "multiple"
+                ],
+                "summary": "Create a racetrack",
+                "operationId": "create-racetrack",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.LinkCreation"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
                 }
             }
         },
+        "/track/race/{link}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This endpoint is used to join a racetrack. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "multiple"
+                ],
+                "summary": "Join a racetrack",
+                "operationId": "racetrack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Race Link",
+                        "name": "link",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RacerM"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
         "handlers.errorResponse": {
             "type": "object",
             "properties": {
@@ -430,7 +463,15 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.midRace": {
+        "models.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CountWpm": {
             "type": "object",
             "properties": {
                 "duration": {
@@ -441,50 +482,14 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.refreshS": {
+        "models.LinkCreation": {
             "type": "object",
             "properties": {
-                "fingerprint": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.signIn": {
-            "type": "object",
-            "properties": {
-                "email": {
+                "content": {
                     "type": "string"
                 },
-                "fingerprint": {
+                "link": {
                     "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.signUp": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "fingerprint": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.speed": {
-            "type": "object",
-            "properties": {
-                "wpm": {
-                    "type": "integer"
                 }
             }
         },
@@ -512,6 +517,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RefreshS": {
+            "type": "object",
+            "properties": {
+                "fingerprint": {
                     "type": "string"
                 }
             }
@@ -544,6 +557,37 @@ const docTemplate = `{
                 }
             }
         },
+        "models.SignIn": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "fingerprint": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SignUp": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "fingerprint": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SingleResponse": {
             "type": "object",
             "properties": {
@@ -552,6 +596,14 @@ const docTemplate = `{
                 },
                 "text": {
                     "$ref": "#/definitions/models.TextInfo"
+                }
+            }
+        },
+        "models.Speed": {
+            "type": "object",
+            "properties": {
+                "wpm": {
+                    "type": "integer"
                 }
             }
         },

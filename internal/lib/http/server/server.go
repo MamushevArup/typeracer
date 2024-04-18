@@ -8,20 +8,21 @@ import (
 	"time"
 )
 
-func Http(handler handlers.Handler, cfg *config.Config) *http.Server {
+func Http(handler handlers.Handler, cfg *config.Config) (*http.Server, error) {
+
 	headerT, err := convertConfigToDuration(cfg.HttpServer.HeaderTimeout)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("parse to duration %v, err=%w", headerT, err)
 	}
 
 	idleT, err := convertConfigToDuration(cfg.HttpServer.IdleTimeout)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("parse to duration %v, err=%w", headerT, err)
 	}
 
 	readT, err := convertConfigToDuration(cfg.HttpServer.Timeout)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("parse to duration %v, err=%w", headerT, err)
 	}
 
 	return &http.Server{
@@ -31,7 +32,7 @@ func Http(handler handlers.Handler, cfg *config.Config) *http.Server {
 		IdleTimeout:       idleT,
 		ReadTimeout:       readT,
 		MaxHeaderBytes:    1 << 20,
-	}
+	}, nil
 }
 
 func convertConfigToDuration(cfg string) (time.Duration, error) {

@@ -18,8 +18,8 @@ type tokenClaims struct {
 
 func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprint string) (string, string, error) {
 	// Sign up accept email, username, password after pass validation and check user existence if user doesn't exist
-	// we provide access/refresh token with role and id inside
-	// access token live 30 minute refresh token live 60 day
+	// we provide endpoint/refresh token with role and id inside
+	// endpoint token live 30 minute refresh token live 60 day
 	// refresh token should store in the cookies
 	// in the service we should hash the password and compare it
 	var racer models.RacerAuth

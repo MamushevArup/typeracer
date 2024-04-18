@@ -57,6 +57,7 @@ func TokenInspector() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": jwt.ErrTokenExpired})
 			return
 		}
+
 		c.Set("ID", claims.ID)
 		c.Set("Role", claims.Role)
 		c.Next()
@@ -68,7 +69,7 @@ func ProtectedRoutes() gin.HandlerFunc {
 		role := c.MustGet("Role")
 		id := c.MustGet("ID")
 		if role == guest && id == "" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "unauthorized access"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "unauthorized endpoint"})
 			return
 		}
 		c.Next()

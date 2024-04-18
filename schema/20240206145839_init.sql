@@ -46,7 +46,7 @@ create table contributor(
     username varchar(128)
 );
 create table single (
-    id uuid primary key ,
+    id uuid primary key , 
     speed int not null default 0,
     duration int not null default 0,
     accuracy float not null default 0,
@@ -64,19 +64,9 @@ create table race_history(
 create table random_text(
     text_id uuid references text(id)
 );
-create table moderation(
-   racer_id uuid not null references racer(id),
-   content text not null,
-   author varchar(128) not null,
-   length int not null,
-   source varchar(64) not null,
-   source_title varchar(128) not null,
-   sent_at timestamp not null
-);
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-drop table moderation;
 drop table race_history;
 drop table single;
 drop table session;

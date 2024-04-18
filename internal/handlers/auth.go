@@ -174,7 +174,7 @@ func (h *handler) logOut(c *gin.Context) {
 
 // @Summary Refresh token
 // @Tags auth
-// @Description This endpoint is used to refresh the access token.
+// @Description This endpoint is used to refresh the endpoint token.
 // @ID refresh
 // @Accept  json
 // @Produce  json

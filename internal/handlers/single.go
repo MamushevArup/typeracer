@@ -52,8 +52,8 @@ func (h *handler) startRace(c *gin.Context) {
 // @ID curr-wpm
 // @Accept  json
 // @Produce  json
-// @Param 	midRace 	body 	midRace 	true 	"Wpm calculation"
-// @Success 201 {object} speed
+// @Param 	models.CountWpm 	body 	models.CountWpm 	true 	"Wpm calculation"
+// @Success 201 {object} models.Speed
 // @Failure 400 {object} errorResponse
 // @Failure 404 {object} errorResponse
 // @Failure 500 {object} errorResponse
@@ -114,7 +114,7 @@ func (h *handler) currWPM(c *gin.Context) {
 // @ID end-race
 // @Accept  json
 // @Produce  json
-// @Param   reqEndSingle     body    models.ReqEndSingle     true        "End Race"
+// @Param   models.ReqEndSingle     body    models.ReqEndSingle     true        "End Race"
 // @Success 201 {object} models.RespEndSingle
 // @Failure 400 {object} errorResponse
 // @Failure 404 {object} errorResponse

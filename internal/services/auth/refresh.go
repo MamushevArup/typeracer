@@ -43,7 +43,7 @@ func (a *auth) RefreshToken(ctx context.Context, refresh, fingerprint string) (s
 		return "", "", fmt.Errorf("%w", err)
 	}
 
-	// create access token and create refresh token and send back to the frontend
+	// create endpoint token and create refresh token and send back to the frontend
 	access, err := a.generateAccessToken(racer.ID.String(), racer.Role)
 	if err != nil {
 		return "", "", fmt.Errorf("%w", err)

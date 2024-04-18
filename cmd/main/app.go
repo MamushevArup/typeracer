@@ -73,7 +73,12 @@ func main() {
 	// deactivate link under 1 hour usage go to the database every <duration>
 	go svc.Link.Kill(time.NewTicker(10 * time.Second))
 
-	srv := server.Http(handler, cfg)
+	srv, err := server.Http(handler, cfg)
+
+	if err != nil {
+		lg.Errorf("unable to create a connection %v", err)
+		os.Exit(1)
+	}
 
 	go func() {
 		if err = srv.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
@@ -82,7 +87,7 @@ func main() {
 		}
 	}()
 
-	// Setting up signal capturing
+	//Setting up signal capturing
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 

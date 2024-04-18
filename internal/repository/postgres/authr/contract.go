@@ -17,6 +17,9 @@ type Auth interface {
 	UserSession(ctx context.Context, token string, id uuid.UUID) (bool, error)
 	Fingerprint(ctx context.Context, fng, refresh string) (models.RacerAuth, error)
 	DeleteRefreshSession(ctx context.Context, refresh string) error
+	UpdateAdmin(ctx context.Context, username, refresh string) error
+	AdminByRefresh(ctx context.Context, refresh string) (string, error)
+	UpdateRefresh(ctx context.Context, id, refreshNew string) error
 }
 
 type auth struct {

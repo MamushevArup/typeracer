@@ -33,7 +33,7 @@ const (
 // @Router /track/link [post]
 func (h *handler) createLink(c *gin.Context) {
 
-	// get value from global auth middleware parsing access token and if token empty user is guest
+	// get value from global auth middleware parsing endpoint token and if token empty user is guest
 	id, ex := c.Get("ID")
 	role := c.MustGet("Role")
 	if !ex {
@@ -165,7 +165,18 @@ func (h *handler) raceTrack(c *gin.Context) {
 				} else {
 					endRaceResult <- raceResult
 				}
+				func(conn *websocket.Conn) {
+					defer func(conn *websocket.Conn) {
+						err = conn.Close()
+						if err != nil {
+							log.Printf("error closing connection %v", err)
+						}
+					}(conn)
 
+					defer close(endRaceResult)
+					defer close(currSpeedCh)
+					defer close(errorCh)
+				}(conn)
 			default:
 				log.Println("Invalid type value")
 				errorCh <- fmt.Errorf("invalid type value %v user=%v", typeValue, id.(string))

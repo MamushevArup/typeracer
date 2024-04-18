@@ -21,6 +21,7 @@ type Auth interface {
 	CheckUserSignUp(ctx context.Context, email, password string) error
 	RefreshToken(ctx context.Context, refresh, fingerprint string) (string, string, error)
 	Logout(ctx context.Context, refresh string) error
+	AdminRefresh(ctx context.Context, refresh string) (string, string, error)
 }
 
 type auth struct {
