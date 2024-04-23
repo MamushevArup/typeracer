@@ -22,17 +22,17 @@ const (
 	cookieName = "refresh_token"
 )
 
-// @Summary Sign in
-// @Tags auth
-// @Description This endpoint is used for user authentication.
-// @ID sign-in
-// @Accept  json
-// @Produce  json
-// @Param   models.SignIn     body    models.SignIn     true        "Sign In"
-// @Success 201 {object} models.AuthResponse
-// @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Router  /api/auth/sign-in [post]
+// @Summary		Sign in
+// @Tags			auth
+// @Description	This endpoint is used for user authentication.
+// @ID				sign-in
+// @Accept			json
+// @Produce		json
+// @Param			models.SignIn	body		models.SignIn	true	"Sign In"
+// @Success		201				{object}	models.AuthResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+// @Router			/api/auth/sign-in [post]
 func (h *handler) signIn(c *gin.Context) {
 	var sign models.SignIn
 
@@ -62,20 +62,20 @@ func (h *handler) signIn(c *gin.Context) {
 
 	c.SetCookie(cookieName, refresh, maxAge, path, domain, false, true)
 
-	c.JSON(http.StatusOK, a)
+	c.JSONP(http.StatusOK, a)
 }
 
-// @Summary Sign up
-// @Tags auth
-// @Description This endpoint is used for user registration.
-// @ID sign-up
-// @Accept  json
-// @Produce  json
-// @Param   models.SignUp     body    models.SignUp     true        "Sign Up"
-// @Success 201 {object} models.AuthResponse
-// @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Router  /api/auth/sign-up [post]
+// @Summary		Sign up
+// @Tags			auth
+// @Description	This endpoint is used for user registration.
+// @ID				sign-up
+// @Accept			json
+// @Produce		json
+// @Param			models.SignUp	body		models.SignUp	true	"Sign Up"
+// @Success		201				{object}	models.AuthResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+// @Router			/api/auth/sign-up [post]
 func (h *handler) signUp(c *gin.Context) {
 
 	var s models.SignUp
@@ -143,17 +143,17 @@ func emailAndPasswdValidation(email, password string) error {
 	return nil
 }
 
-// @Summary Log out
-// @Tags auth
-// @Description This endpoint is used for user logout.
-// @ID log-out
-// @Accept  json
-// @Produce  json
-// @Success 200
-// @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Security Bearer
-// @Router  /api/auth/logout [delete]
+// @Summary		Log out
+// @Tags			auth
+// @Description	This endpoint is used for user logout.
+// @ID				log-out
+// @Accept			json
+// @Produce		json
+// @Success		200
+// @Failure		400	{object}	errorResponse
+// @Failure		500	{object}	errorResponse
+// @Security		Bearer
+// @Router			/api/auth/logout [delete]
 func (h *handler) logOut(c *gin.Context) {
 
 	// here I will get refresh token and remove by this refresh token
@@ -172,18 +172,18 @@ func (h *handler) logOut(c *gin.Context) {
 	c.Status(200)
 }
 
-// @Summary Refresh token
-// @Tags auth
-// @Description This endpoint is used to refresh the endpoint token.
-// @ID refresh
-// @Accept  json
-// @Produce  json
-// @Param models.RefreshS     body    models.RefreshS     true        "Refresh"
-// @Success 201 {object} models.AuthResponse
-// @Failure 400 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Security Bearer
-// @Router  /api/auth/refresh [post]
+// @Summary		Refresh token
+// @Tags			auth
+// @Description	This endpoint is used to refresh the endpoint token.
+// @ID				refresh
+// @Accept			json
+// @Produce		json
+// @Param			models.RefreshS	body		models.RefreshS	true	"Refresh"
+// @Success		201				{object}	models.AuthResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+// @Security		Bearer
+// @Router			/api/auth/refresh [post]
 func (h *handler) refresh(c *gin.Context) {
 
 	var r models.RefreshS

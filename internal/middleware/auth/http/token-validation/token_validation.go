@@ -32,6 +32,7 @@ func TokenInspector() gin.HandlerFunc {
 				claim.Role = guest
 				c.Set("Role", claim.Role)
 				c.Next()
+				return
 			}
 			c.AbortWithStatusJSON(http.StatusBadRequest, authHeader)
 			return
@@ -61,18 +62,7 @@ func TokenInspector() gin.HandlerFunc {
 		c.Set("ID", claims.ID)
 		c.Set("Role", claims.Role)
 		c.Next()
-	}
-}
-
-func ProtectedRoutes() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role := c.MustGet("Role")
-		id := c.MustGet("ID")
-		if role == guest && id == "" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "unauthorized endpoint"})
-			return
-		}
-		c.Next()
+		return
 	}
 }
 

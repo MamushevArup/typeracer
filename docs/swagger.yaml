@@ -121,7 +121,7 @@ info:
   description: API for typeracer game clone. Typeracer popular game where users improve
     their typing skills in interactive format
   title: Typeracer Game clone API
-  version: "1.0"
+  version: "2.0"
 paths:
   /api/auth/logout:
     delete:

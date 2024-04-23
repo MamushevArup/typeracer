@@ -6,6 +6,8 @@ import (
 	"github.com/MamushevArup/typeracer/internal/repository"
 )
 
+const limitMax = 10
+
 type Admin interface {
 	ShowContentToModerate(ctx context.Context, limit, offset, sort string) ([]models.ModerationServiceResponse, error)
 	TextDetails(ctx context.Context, modId string) (models.ModerationTextDetails, error)
