@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/MamushevArup/typeracer/internal/repository/postgres/admin"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/authr"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/contributor"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/multiple/link"
@@ -18,6 +19,7 @@ type Repo struct {
 	Auth        authr.Auth
 	Link        link.Manager
 	Multiple    race.Multiple
+	Admin       admin.Moderation
 }
 
 func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
@@ -27,5 +29,6 @@ func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
 		Auth:        authr.NewUser(db, lg),
 		Link:        link.NewManager(db, lg),
 		Multiple:    race.NewRace(lg, db),
+		Admin:       admin.NewModeration(db, lg),
 	}
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	_ "github.com/MamushevArup/typeracer/docs"
 	"github.com/MamushevArup/typeracer/internal/middleware/auth/http/access"
+	"github.com/MamushevArup/typeracer/internal/middleware/auth/http/admin"
 	"github.com/MamushevArup/typeracer/internal/middleware/auth/http/endpoint"
 	validation "github.com/MamushevArup/typeracer/internal/middleware/auth/http/token-validation"
 	validationWs "github.com/MamushevArup/typeracer/internal/middleware/auth/ws/token-ws"
@@ -33,8 +34,18 @@ func (h *handler) InitRoutes() *gin.Engine {
 
 	moder := router.Group("/admin")
 	{
-		moder.POST("/sign-in", h.adminSignIn)
-		moder.POST("/refresh", h.adminRefresh)
+		moderAuth := moder.Group("/auth")
+		{
+			moderAuth.POST("/sign-in", h.adminSignIn)
+			moderAuth.POST("/refresh", h.adminRefresh)
+		}
+		moderation := moder.Group("/moderation")
+		moderation.Use(admin.Confirm())
+		{
+			moderation.GET("/all", h.showContentToModerate)
+			moderation.GET("/:moderation_id", h.moderationText)
+			moderation.POST("/content/:moderation_id/approve", h.approveContent)
+		}
 	}
 
 	sgl := router.Group("/single")

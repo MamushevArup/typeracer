@@ -58,8 +58,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	defer db.Close()
-
 	lg.Info("DB connection established")
 
 	repo := repository.NewRepo(lg, db)

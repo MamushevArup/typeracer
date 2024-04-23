@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/repository"
+	"github.com/MamushevArup/typeracer/internal/services/admin"
 	"github.com/MamushevArup/typeracer/internal/services/auth"
 	"github.com/MamushevArup/typeracer/internal/services/contribute"
 	"github.com/MamushevArup/typeracer/internal/services/multiple/link"
@@ -16,6 +17,7 @@ type Service struct {
 	Auth       auth.Auth
 	Multiple   race.Racer
 	Link       link.Checker
+	Admin      admin.Admin
 }
 
 func NewService(repo *repository.Repo, cfg *config.Config) *Service {
@@ -25,5 +27,6 @@ func NewService(repo *repository.Repo, cfg *config.Config) *Service {
 		Auth:       auth.NewAuth(repo),
 		Multiple:   race.NewMultiple(repo, cfg),
 		Link:       link.NewLink(repo),
+		Admin:      admin.New(repo),
 	}
 }
