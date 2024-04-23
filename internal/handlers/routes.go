@@ -45,6 +45,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 			moderation.GET("/all", h.showContentToModerate)
 			moderation.GET("/:moderation_id", h.moderationText)
 			moderation.POST("/content/:moderation_id/approve", h.approveContent)
+			moderation.POST("/content/:moderation_id/reject", h.rejectContent)
 		}
 	}
 

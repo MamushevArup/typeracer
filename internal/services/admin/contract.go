@@ -10,6 +10,7 @@ type Admin interface {
 	ShowContentToModerate(ctx context.Context, limit, offset, sort string) ([]models.ModerationServiceResponse, error)
 	TextDetails(ctx context.Context, modId string) (models.ModerationTextDetails, error)
 	ApproveContent(ctx context.Context, modId string) error
+	RejectContent(ctx context.Context, reject models.ModerationRejectToService) error
 }
 
 type service struct {

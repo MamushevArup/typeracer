@@ -11,6 +11,31 @@ import (
 
 const limitMax = 10
 
+func (s *service) RejectContent(ctx context.Context, reject models.ModerationRejectToService) error {
+	if reject.ModerationID == "" {
+		return fmt.Errorf("moderation id is empty")
+	}
+	modUUID, err := uuid.Parse(reject.ModerationID)
+	if err != nil {
+		return fmt.Errorf("moderation id is not valid")
+	}
+
+	if reject.Reason == "" {
+		return fmt.Errorf("reason for reject must be provided")
+	}
+
+	rejectRepo := models.ModerationRejectToRepo{
+		ModerationID: modUUID,
+		Reason:       reject.Reason,
+	}
+
+	err = s.repo.Admin.RejectContent(ctx, rejectRepo)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	return nil
+}
+
 func (s *service) ShowContentToModerate(ctx context.Context, limit, offset, sort string) ([]models.ModerationServiceResponse, error) {
 	localLimit := limitMax
 	localOffset := 0

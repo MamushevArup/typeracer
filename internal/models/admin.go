@@ -47,23 +47,33 @@ type ModerationApprove struct {
 }
 
 type ApproveToText struct {
-	TextID        uuid.UUID `db:"id"`
-	ContributorID uuid.UUID `db:"contributor_id"`
-	Content       string    `db:"content"`
-	Author        string    `db:"author"`
-	AcceptedAt    time.Time `db:"accepted_at"`
-	Length        int       `db:"length"`
-	Source        string    `db:"source"`
-	SourceTitle   string    `db:"source_title"`
+	TextID        uuid.UUID
+	ContributorID uuid.UUID
+	Content       string
+	Author        string
+	AcceptedAt    time.Time
+	Length        int
+	Source        string
+	SourceTitle   string
 }
 
 type ApproveToContributor struct {
-	ContributorID uuid.UUID `db:"user_id"`
-	SentAt        time.Time `db:"sent_at"`
-	TextID        uuid.UUID `db:"text_id"`
+	ContributorID uuid.UUID
+	SentAt        time.Time
+	TextID        uuid.UUID
 }
 
 type TextAcceptTransaction struct {
 	Text        ApproveToText
 	Contributor ApproveToContributor
+}
+
+type ModerationRejectToService struct {
+	ModerationID string
+	Reason       string `json:"reason"`
+}
+
+type ModerationRejectToRepo struct {
+	ModerationID uuid.UUID
+	Reason       string
 }

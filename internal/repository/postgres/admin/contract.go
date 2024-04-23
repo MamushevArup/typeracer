@@ -14,6 +14,7 @@ type Moderation interface {
 	ModerationById(ctx context.Context, modId uuid.UUID) (models.ModerationApprove, error)
 	ApproveContent(ctx context.Context, transaction models.TextAcceptTransaction) error
 	DeleteModerationText(ctx context.Context, modId uuid.UUID) error
+	RejectContent(ctx context.Context, reject models.ModerationRejectToRepo) error
 }
 
 type repo struct {

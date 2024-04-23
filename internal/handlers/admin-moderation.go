@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -30,7 +31,6 @@ func (h *handler) moderationText(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, details)
-	return
 }
 
 func (h *handler) approveContent(c *gin.Context) {
@@ -43,5 +43,25 @@ func (h *handler) approveContent(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
-	return
+}
+
+func (h *handler) rejectContent(c *gin.Context) {
+	modId := c.Param("moderation_id")
+
+	var reject models.ModerationRejectToService
+
+	if err := c.ShouldBindJSON(&reject); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
+	}
+
+	reject.ModerationID = modId
+
+	err := h.service.Admin.RejectContent(c.Request.Context(), reject)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
