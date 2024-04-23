@@ -49,7 +49,7 @@ func (h *handler) adminRefresh(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(cookieName, refresh, maxAge, path, domain, false, true)
+	c.SetCookie(cookieName, refresh, maxAge, "/admin", domain, false, true)
 
 	c.JSON(http.StatusCreated, models.AdminSignInResponse{Access: access})
 }
