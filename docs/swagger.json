@@ -81,7 +81,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AdminSignInResponse"
+                            "$ref": "#/definitions/models.SignInHandler"
                         }
                     },
                     "400": {
@@ -410,7 +410,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AuthResponse"
+                            "$ref": "#/definitions/models.SignInHandler"
                         }
                     },
                     "400": {
@@ -457,7 +457,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AuthResponse"
+                            "$ref": "#/definitions/models.SignUpHandler"
                         }
                     },
                     "400": {
@@ -974,6 +974,20 @@
                 }
             }
         },
+        "models.SignInHandler": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SignUp": {
             "type": "object",
             "properties": {
@@ -987,6 +1001,17 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SignUpHandler": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "avatar": {
                     "type": "string"
                 }
             }

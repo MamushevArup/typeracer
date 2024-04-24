@@ -127,6 +127,15 @@ definitions:
       password:
         type: string
     type: object
+  models.SignInHandler:
+    properties:
+      access:
+        type: string
+      avatar:
+        type: string
+      username:
+        type: string
+    type: object
   models.SignUp:
     properties:
       email:
@@ -136,6 +145,13 @@ definitions:
       password:
         type: string
       username:
+        type: string
+    type: object
+  models.SignUpHandler:
+    properties:
+      access:
+        type: string
+      avatar:
         type: string
     type: object
   models.SingleResponse:
@@ -220,7 +236,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.AdminSignInResponse'
+            $ref: '#/definitions/models.SignInHandler'
         "400":
           description: Bad Request
           schema:
@@ -434,7 +450,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.SignInHandler'
         "400":
           description: Bad Request
           schema:
@@ -465,7 +481,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.SignUpHandler'
         "400":
           description: Bad Request
           schema:

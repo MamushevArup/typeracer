@@ -85,7 +85,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AdminSignInResponse"
+                            "$ref": "#/definitions/models.SignInHandler"
                         }
                     },
                     "400": {
@@ -414,7 +414,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AuthResponse"
+                            "$ref": "#/definitions/models.SignInHandler"
                         }
                     },
                     "400": {
@@ -461,7 +461,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.AuthResponse"
+                            "$ref": "#/definitions/models.SignUpHandler"
                         }
                     },
                     "400": {
@@ -978,6 +978,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.SignInHandler": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SignUp": {
             "type": "object",
             "properties": {
@@ -991,6 +1005,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SignUpHandler": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "avatar": {
                     "type": "string"
                 }
             }
