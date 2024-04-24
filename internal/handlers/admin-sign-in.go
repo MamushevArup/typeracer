@@ -4,7 +4,6 @@ import (
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"os"
 )
 
 // @Summary		Sign in for admins
@@ -29,8 +28,8 @@ func (h *handler) adminSignIn(c *gin.Context) {
 		return
 	}
 
-	adminUsername := os.Getenv("ADMIN_USERNAME")
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminUsername := h.cfg.Admin.Username
+	adminPassword := h.cfg.Admin.Password
 
 	if sign.Username != adminUsername || sign.Password != adminPassword {
 		newErrorResponse(c, http.StatusUnauthorized, "invalid credentials")

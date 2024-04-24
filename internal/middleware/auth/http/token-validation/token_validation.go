@@ -2,10 +2,10 @@ package token_validation
 
 import (
 	"errors"
+	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -21,7 +21,7 @@ type tokenClaims struct {
 	jwt.RegisteredClaims
 }
 
-func TokenInspector() gin.HandlerFunc {
+func TokenInspector(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		claim := &tokenClaims{}
@@ -39,7 +39,7 @@ func TokenInspector() gin.HandlerFunc {
 		}
 
 		t, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+			return []byte(cfg.Jwt.SecretKey), nil
 		})
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": err.Error()})

@@ -10,7 +10,6 @@ import (
 	"github.com/MamushevArup/typeracer/internal/services"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/MamushevArup/typeracer/pkg/psql"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -40,10 +39,6 @@ func main() {
 		cancel()
 	}()
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("can't read .env %v", err)
-	}
-
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("error due to: %v", err)
@@ -62,9 +57,14 @@ func main() {
 
 	repo := repository.NewRepo(lg, db)
 
+	//s3, err := aws.New(cfg)
+	//if err != nil {
+	//	lg.Fatalf("fail with external api init due to err=%v", err)
+	//}
+
 	svc := services.NewService(repo, cfg)
 
-	handler := handlers.NewHandler(svc)
+	handler := handlers.NewHandler(svc, cfg)
 
 	lg.Info("Server started at port " + cfg.HttpServer.Port)
 

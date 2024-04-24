@@ -11,7 +11,7 @@ func (a *auth) AdminRefresh(ctx context.Context, refresh string) (string, string
 		return "", "", fmt.Errorf("%w", err)
 	}
 
-	err = parseRefreshToken(refresh)
+	err = a.parseRefreshToken(refresh)
 	if err != nil {
 		return "", "", fmt.Errorf("unable to parse refresh token %w", err)
 	}

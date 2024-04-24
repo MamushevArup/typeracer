@@ -6,15 +6,14 @@ import (
 	"github.com/MamushevArup/typeracer/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
 
 func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error) {
 
-	adminUsername := os.Getenv("ADMIN_USERNAME")
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminUsername := a.cfg.Admin.Username
+	adminPassword := a.cfg.Admin.Password
 
 	if email == adminUsername && password == adminPassword {
 		access, err := a.generateAccessToken("1", "admin")

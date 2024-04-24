@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"os"
 	"time"
 )
 
@@ -21,7 +20,7 @@ func (a *auth) generateAccessToken(id, role string) (string, error) {
 
 	token := jwt.NewWithClaims(signingMethod, t)
 
-	accessToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	accessToken, err := token.SignedString([]byte(a.cfg.Jwt.SecretKey))
 	if err != nil {
 		return "", fmt.Errorf("fail to generate token %w", err)
 	}
@@ -38,7 +37,7 @@ func (a *auth) generateRefreshToken() (string, error) {
 
 	token := jwt.NewWithClaims(signingMethod, claim)
 
-	refreshToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	refreshToken, err := token.SignedString([]byte(a.cfg.Jwt.SecretKey))
 	if err != nil {
 		return "", fmt.Errorf("unable to generate token %w", err)
 	}
@@ -56,10 +55,10 @@ func (a *auth) generateHashPassword(password string) (string, error) {
 	return string(hashPasswd), nil
 }
 
-func parseRefreshToken(refresh string) error {
+func (a *auth) parseRefreshToken(refresh string) error {
 
 	parsedToken, err := jwt.Parse(refresh, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+		return []byte(a.cfg.Jwt.SecretKey), nil
 	})
 	if err != nil {
 		return fmt.Errorf("unable to parse token %w", err)

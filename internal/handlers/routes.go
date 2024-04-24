@@ -23,7 +23,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	router.Use(validation.TokenInspector())
+	router.Use(validation.TokenInspector(h.cfg))
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -81,7 +81,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 	{
 		mlt.POST("/link", h.createLink)
 		// this racetrack will look like this. /race/link?t=<endpoint token>
-		mlt.GET("/race/:link", validationWs.TokenVerifier(), h.raceTrack)
+		mlt.GET("/race/:link", validationWs.TokenVerifier(h.cfg), h.raceTrack)
 	}
 
 	return router

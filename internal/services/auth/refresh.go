@@ -21,7 +21,7 @@ func (a *auth) RefreshToken(ctx context.Context, refresh, fingerprint string) (s
 	}
 
 	// check the token expires or not
-	if err = parseRefreshToken(refresh); err != nil {
+	if err = a.parseRefreshToken(refresh); err != nil {
 		return "", "", fmt.Errorf("unable to parse refresh token %w", err)
 	}
 

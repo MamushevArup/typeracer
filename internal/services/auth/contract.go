@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
@@ -26,8 +27,9 @@ type Auth interface {
 
 type auth struct {
 	repo *repository.Repo
+	cfg  *config.Config
 }
 
-func NewAuth(repo *repository.Repo) Auth {
-	return &auth{repo: repo}
+func NewAuth(repo *repository.Repo, cfg *config.Config) Auth {
+	return &auth{repo: repo, cfg: cfg}
 }

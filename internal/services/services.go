@@ -24,7 +24,7 @@ func NewService(repo *repository.Repo, cfg *config.Config) *Service {
 	return &Service{
 		Single:     single.NewPracticeY(repo),
 		Contribute: contribute.NewContribute(repo),
-		Auth:       auth.NewAuth(repo),
+		Auth:       auth.NewAuth(repo, cfg),
 		Multiple:   race.NewMultiple(repo, cfg),
 		Link:       link.NewLink(repo),
 		Admin:      admin.New(repo),
