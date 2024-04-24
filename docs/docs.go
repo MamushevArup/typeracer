@@ -15,6 +15,291 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/auth/refresh": {
+            "post": {
+                "description": "Admin can refresh their token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "refresh for admins",
+                "operationId": "refresh_admin",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.AdminSignInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/auth/sign-in": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This endpoint is used for user authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Sign in for admins",
+                "operationId": "sign-in-admin",
+                "parameters": [
+                    {
+                        "description": "Sign In",
+                        "name": "models.AdminSignIn",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AdminSignIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.AdminSignInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/moderation/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This endpoint is used for see content in moderation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "Get all text to see in pending mode",
+                "operationId": "moderation-all",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ModerationServiceResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/moderation/content/{moderation_id}/approve": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Admin can approve this content and it appear in global text storage",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "Approve provided text content",
+                "operationId": "moderation-approve",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Moderation ID",
+                        "name": "moderation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/moderation/content/{moderation_id}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Admin can reject some content because of problem in content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "Reject provided content",
+                "operationId": "moderation-reject",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Moderation ID",
+                        "name": "moderation_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reject",
+                        "name": "models.ModerationRejectToService",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ModerationRejectToService"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/moderation/{moderation_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get details of a specific moderation item",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "Moderation details",
+                "operationId": "moderation-content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Moderation ID",
+                        "name": "moderation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ModerationTextDetails"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/logout": {
             "delete": {
                 "security": [
@@ -55,11 +340,6 @@ const docTemplate = `{
         },
         "/api/auth/refresh": {
             "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
                 "description": "This endpoint is used to refresh the endpoint token.",
                 "consumes": [
                     "application/json"
@@ -195,6 +475,49 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handlers.errorResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/content/contribute": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Endpoint related to contribute text to the general text set",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Contribute text",
+                "operationId": "contribute",
+                "parameters": [
+                    {
+                        "description": "Contribute",
+                        "name": "models.ContributeHandlerRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ContributeHandlerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -463,10 +786,49 @@ const docTemplate = `{
                 }
             }
         },
+        "models.AdminSignIn": {
+            "type": "object",
+            "properties": {
+                "fingerprint": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.AdminSignInResponse": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                }
+            }
+        },
         "models.AuthResponse": {
             "type": "object",
             "properties": {
                 "access": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ContributeHandlerRequest": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "source_title": {
                     "type": "string"
                 }
             }
@@ -489,6 +851,51 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "link": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ModerationRejectToService": {
+            "type": "object",
+            "properties": {
+                "moderationID": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ModerationServiceResponse": {
+            "type": "object",
+            "properties": {
+                "contributor_name": {
+                    "type": "string"
+                },
+                "moderation_id": {
+                    "type": "string"
+                },
+                "sent_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ModerationTextDetails": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "moderation_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "source_title": {
                     "type": "string"
                 }
             }

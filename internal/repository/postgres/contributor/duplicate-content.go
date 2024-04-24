@@ -16,7 +16,7 @@ func (r *repo) DuplicateContent(ctx context.Context, racerID uuid.UUID, contentH
 
 	sql, args, err := sq.Select("COUNT(*)").
 		From("moderation").
-		Where(squirrel.Eq{"content_hash": contentHash, "status": 1}).
+		Where(squirrel.Eq{"content_hash": contentHash}).
 		ToSql()
 
 	if err != nil {

@@ -68,4 +68,3 @@ func (r *repo) RejectContent(ctx context.Context, reject models.ModerationReject
 
 	return nil
 }
-

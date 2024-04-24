@@ -15,9 +15,10 @@ func (r *repo) RacerInfo(ctx context.Context, id uuid.UUID) (models.RacerInfo, e
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	query, args, err := sq.
-		Select("username, avatar").
+		Select("username, url as avatar").
 		From("racer").
-		Where(squirrel.Eq{"id": id}).
+		Join("avatar a on racer.avatar_id = a.id").
+		Where(squirrel.Eq{"racer.id": id}).
 		ToSql()
 
 	if err != nil {

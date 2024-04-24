@@ -20,6 +20,7 @@ const (
 )
 
 // createLink unique uuid link for the racetrack. Can lift up to 5 racer for now
+//
 //	@Summary		Create a racetrack
 //	@Tags			multiple
 //	@Description	This endpoint is used to create a racetrack. It generates a unique link for the racetrack and returns it to the user.
@@ -67,18 +68,18 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-//	@Summary		Join a racetrack
-//	@Tags			multiple
-//	@Description	This endpoint is used to join a racetrack. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.
-//	@ID				racetrack
-//	@Accept			json
-//	@Produce		json
-//	@Param			link	path		string	true	"Race Link"
-//	@Success		200		{object}	models.RacerM
-//	@Failure		400		{object}	errorResponse
-//	@Failure		500		{object}	errorResponse
-//	@Security		ApiKeyAuth
-//	@Router			/track/race/{link} [get]
+// @Summary		Join a racetrack
+// @Tags			multiple
+// @Description	This endpoint is used to join a racetrack. It upgrades the HTTP connection to a WebSocket connection. The server sends messages with the current race status to the client over the WebSocket connection.
+// @ID				racetrack
+// @Accept			json
+// @Produce		json
+// @Param			link	path		string	true	"Race Link"
+// @Success		200		{object}	models.RacerM
+// @Failure		400		{object}	errorResponse
+// @Failure		500		{object}	errorResponse
+// @Security		ApiKeyAuth
+// @Router			/track/race/{link} [get]
 func (h *handler) raceTrack(c *gin.Context) {
 
 	link := c.Param("link")

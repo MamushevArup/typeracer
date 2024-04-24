@@ -19,7 +19,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		AllowHeaders:     []string{"Content-Type"},
 		AllowCredentials: true,
 	}))
 
@@ -27,11 +27,13 @@ func (h *handler) InitRoutes() *gin.Engine {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// documented with swagger now
 	contribute := router.Group("/content")
 	{
 		contribute.POST("/contribute", endpoint.Access(h.service), h.contribute)
 	}
 
+	// documented with swagger now
 	moder := router.Group("/admin")
 	{
 		moderAuth := moder.Group("/auth")
@@ -44,8 +46,13 @@ func (h *handler) InitRoutes() *gin.Engine {
 		{
 			moderation.GET("/all", h.showContentToModerate)
 			moderation.GET("/:moderation_id", h.moderationText)
-			moderation.POST("/content/:moderation_id/approve", h.approveContent)
-			moderation.POST("/content/:moderation_id/reject", h.rejectContent)
+
+			content := moderation.Group("/content")
+			{
+				content.POST("/:moderation_id/approve", h.approveContent)
+				content.POST("/:moderation_id/reject", h.rejectContent)
+			}
+
 		}
 	}
 
@@ -70,12 +77,11 @@ func (h *handler) InitRoutes() *gin.Engine {
 	}
 	// this route stands for create racetrack and start a multiple race
 	mlt := router.Group("/track")
-	mlt.Use(validationWs.TokenVerifier())
 	mlt.Use(access.OnlyGuestOrRacer())
 	{
 		mlt.POST("/link", h.createLink)
 		// this racetrack will look like this. /race/link?t=<endpoint token>
-		mlt.GET("/race/:link", h.raceTrack)
+		mlt.GET("/race/:link", validationWs.TokenVerifier(), h.raceTrack)
 	}
 
 	return router

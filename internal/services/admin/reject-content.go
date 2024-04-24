@@ -31,4 +31,3 @@ func (s *service) RejectContent(ctx context.Context, reject models.ModerationRej
 	}
 	return nil
 }
-

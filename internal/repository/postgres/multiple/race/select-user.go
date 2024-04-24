@@ -15,9 +15,10 @@ func (m *multiple) User(ctx context.Context, id uuid.UUID) (models.RacerM, error
 
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	query, args, err := sq.
-		Select("email, username, avatar, role").
+		Select("email, username, url as avatar, role").
 		From("racer").
-		Where("id = ?", id).
+		Join("avatar a on racer.avatar_id = a.id").
+		Where("racer.id = ?", id).
 		ToSql()
 
 	if err != nil {

@@ -7,18 +7,18 @@ import (
 	"net/http"
 )
 
-//	@Summary		Start a new race
-//	@Tags			single
-//	@Description	This endpoint is used to start a new race for a racer.
-//	@ID				start-race
-//	@Accept			json
-//	@Produce		json
-//	@Success		201	{object}	models.SingleResponse
-//	@Failure		400	{object}	errorResponse
-//	@Failure		404	{object}	errorResponse
-//	@Failure		500	{object}	errorResponse
-//	@Security		Bearer
-//	@Router			/single/race [get]
+// @Summary		Start a new race
+// @Tags			single
+// @Description	This endpoint is used to start a new race for a racer.
+// @ID				start-race
+// @Accept			json
+// @Produce		json
+// @Success		201	{object}	models.SingleResponse
+// @Failure		400	{object}	errorResponse
+// @Failure		404	{object}	errorResponse
+// @Failure		500	{object}	errorResponse
+// @Security		Bearer
+// @Router			/single/race [get]
 func (h *handler) startRace(c *gin.Context) {
 
 	id, ex := c.Get("ID")
@@ -46,19 +46,19 @@ func (h *handler) startRace(c *gin.Context) {
 	c.JSON(http.StatusCreated, race)
 }
 
-//	@Summary		Calculate current Words Per Minute (WPM)
-//	@Tags			single
-//	@Description	This endpoint is used to calculate the current WPM for a racer.
-//	@ID				curr-wpm
-//	@Accept			json
-//	@Produce		json
-//	@Param			models.CountWpm	body		models.CountWpm	true	"Wpm calculation"
-//	@Success		201				{object}	models.Speed
-//	@Failure		400				{object}	errorResponse
-//	@Failure		404				{object}	errorResponse
-//	@Failure		500				{object}	errorResponse
-//	@Security		Bearer
-//	@Router			/single/curr-wpm [post]
+// @Summary		Calculate current Words Per Minute (WPM)
+// @Tags			single
+// @Description	This endpoint is used to calculate the current WPM for a racer.
+// @ID				curr-wpm
+// @Accept			json
+// @Produce		json
+// @Param			models.CountWpm	body		models.CountWpm	true	"Wpm calculation"
+// @Success		201				{object}	models.Speed
+// @Failure		400				{object}	errorResponse
+// @Failure		404				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+// @Security		Bearer
+// @Router			/single/curr-wpm [post]
 func (h *handler) currWPM(c *gin.Context) {
 
 	id, ex := c.Get("ID")
@@ -108,19 +108,19 @@ func (h *handler) currWPM(c *gin.Context) {
 	c.JSON(http.StatusCreated, count)
 }
 
-//	@Summary		End a race
-//	@Tags			single
-//	@Description	This endpoint is used to end a race for a racer.
-//	@ID				end-race
-//	@Accept			json
-//	@Produce		json
-//	@Param			models.ReqEndSingle	body		models.ReqEndSingle	true	"End Race"
-//	@Success		201					{object}	models.RespEndSingle
-//	@Failure		400					{object}	errorResponse
-//	@Failure		404					{object}	errorResponse
-//	@Failure		500					{object}	errorResponse
-//	@Security		Bearer
-//	@Router			/single/end-race [post]
+// @Summary		End a race
+// @Tags			single
+// @Description	This endpoint is used to end a race for a racer.
+// @ID				end-race
+// @Accept			json
+// @Produce		json
+// @Param			models.ReqEndSingle	body		models.ReqEndSingle	true	"End Race"
+// @Success		201					{object}	models.RespEndSingle
+// @Failure		400					{object}	errorResponse
+// @Failure		404					{object}	errorResponse
+// @Failure		500					{object}	errorResponse
+// @Security		Bearer
+// @Router			/single/end-race [post]
 func (h *handler) endRace(c *gin.Context) {
 
 	var req models.ReqEndSingle

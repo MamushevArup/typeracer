@@ -7,6 +7,20 @@ import (
 	"os"
 )
 
+// @Summary		Sign in for admins
+// @Tags		admin
+// @Description	This endpoint is used for user authentication.
+// @ID				sign-in-admin
+// @Accept			json
+// @Produce		json
+// @Param			models.AdminSignIn	body		models.AdminSignIn	true	"Sign In"
+// @Success		201				{object}	models.AdminSignInResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+//
+//	@Security		ApiKeyAuth
+//
+// @Router			/admin/auth/sign-in [post]
 func (h *handler) adminSignIn(c *gin.Context) {
 	var sign models.AdminSignIn
 
@@ -35,6 +49,16 @@ func (h *handler) adminSignIn(c *gin.Context) {
 
 }
 
+// @Summary		refresh for admins
+// @Tags		admin
+// @Description	Admin can refresh their token
+// @ID				refresh_admin
+// @Accept			json
+// @Produce		json
+// @Success		201				{object}	models.AdminSignInResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+// @Router			/admin/auth/refresh [post]
 func (h *handler) adminRefresh(c *gin.Context) {
 
 	cookie, err := c.Cookie("refresh_token")

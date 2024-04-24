@@ -25,4 +25,3 @@ func (s *service) TextDetails(ctx context.Context, modId string) (models.Moderat
 
 	return details, nil
 }
-

@@ -62,7 +62,6 @@ func TokenInspector() gin.HandlerFunc {
 		c.Set("ID", claims.ID)
 		c.Set("Role", claims.Role)
 		c.Next()
-		return
 	}
 }
 

@@ -35,5 +35,4 @@ func (r *repo) InsertToModeration(ctx context.Context, c models.ContributeServic
 	}
 
 	return nil
-
 }

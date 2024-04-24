@@ -4,9 +4,34 @@ definitions:
       message:
         type: string
     type: object
+  models.AdminSignIn:
+    properties:
+      fingerprint:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.AdminSignInResponse:
+    properties:
+      access:
+        type: string
+    type: object
   models.AuthResponse:
     properties:
       access:
+        type: string
+    type: object
+  models.ContributeHandlerRequest:
+    properties:
+      author:
+        type: string
+      content:
+        type: string
+      source:
+        type: string
+      source_title:
         type: string
     type: object
   models.CountWpm:
@@ -21,6 +46,35 @@ definitions:
       content:
         type: string
       link:
+        type: string
+    type: object
+  models.ModerationRejectToService:
+    properties:
+      moderationID:
+        type: string
+      reason:
+        type: string
+    type: object
+  models.ModerationServiceResponse:
+    properties:
+      contributor_name:
+        type: string
+      moderation_id:
+        type: string
+      sent_at:
+        type: string
+    type: object
+  models.ModerationTextDetails:
+    properties:
+      author:
+        type: string
+      content:
+        type: string
+      moderation_id:
+        type: string
+      source:
+        type: string
+      source_title:
         type: string
     type: object
   models.RacerInfo:
@@ -123,6 +177,189 @@ info:
   title: Typeracer Game clone API
   version: "2.0"
 paths:
+  /admin/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Admin can refresh their token
+      operationId: refresh_admin
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AdminSignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: refresh for admins
+      tags:
+      - admin
+  /admin/auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint is used for user authentication.
+      operationId: sign-in-admin
+      parameters:
+      - description: Sign In
+        in: body
+        name: models.AdminSignIn
+        required: true
+        schema:
+          $ref: '#/definitions/models.AdminSignIn'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AdminSignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Sign in for admins
+      tags:
+      - admin
+  /admin/moderation/{moderation_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific moderation item
+      operationId: moderation-content
+      parameters:
+      - description: Moderation ID
+        in: path
+        name: moderation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ModerationTextDetails'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Moderation details
+      tags:
+      - moderation
+  /admin/moderation/all:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint is used for see content in moderation
+      operationId: moderation-all
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/models.ModerationServiceResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all text to see in pending mode
+      tags:
+      - moderation
+  /admin/moderation/content/{moderation_id}/approve:
+    post:
+      consumes:
+      - application/json
+      description: Admin can approve this content and it appear in global text storage
+      operationId: moderation-approve
+      parameters:
+      - description: Moderation ID
+        in: path
+        name: moderation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Approve provided text content
+      tags:
+      - moderation
+  /admin/moderation/content/{moderation_id}/reject:
+    post:
+      consumes:
+      - application/json
+      description: Admin can reject some content because of problem in content
+      operationId: moderation-reject
+      parameters:
+      - description: Moderation ID
+        in: path
+        name: moderation_id
+        required: true
+        type: string
+      - description: Reject
+        in: body
+        name: models.ModerationRejectToService
+        required: true
+        schema:
+          $ref: '#/definitions/models.ModerationRejectToService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Reject provided content
+      tags:
+      - moderation
   /api/auth/logout:
     delete:
       consumes:
@@ -175,8 +412,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.errorResponse'
-      security:
-      - Bearer: []
       summary: Refresh token
       tags:
       - auth
@@ -242,6 +477,33 @@ paths:
       summary: Sign up
       tags:
       - auth
+  /content/contribute:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint related to contribute text to the general text set
+      operationId: contribute
+      parameters:
+      - description: Contribute
+        in: body
+        name: models.ContributeHandlerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContributeHandlerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      security:
+      - Bearer: []
+      summary: Contribute text
+      tags:
+      - content
   /single/curr-wpm:
     post:
       consumes:

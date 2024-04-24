@@ -15,6 +15,18 @@ const (
 	sourceTitleMaxLen = 30
 )
 
+// @Summary		Contribute text
+// @Tags			content
+// @Description	Endpoint related to contribute text to the general text set
+// @ID				contribute
+// @Accept			json
+// @Produce		json
+// @Param			models.ContributeHandlerRequest	body		models.ContributeHandlerRequest	true	"Contribute"
+// @Success		201
+// @Failure		400
+// @Failure		500
+// @Security		Bearer
+// @Router			/content/contribute [post]
 func (h *handler) contribute(c *gin.Context) {
 	var review models.ContributeHandlerRequest
 

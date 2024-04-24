@@ -31,8 +31,8 @@ const (
 //	@in							header
 //	@name						Authorization
 
-//	@host		localhost:1001
-//	@schemes	http
+// @host		localhost:1001
+// @schemes	http
 func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)

@@ -6,6 +6,19 @@ import (
 	"net/http"
 )
 
+// @Summary		Get all text to see in pending mode
+// @Tags		moderation
+// @Description	This endpoint is used for see content in moderation
+// @ID				moderation-all
+// @Accept			json
+// @Produce		json
+// @Success		201				{object}	[]models.ModerationServiceResponse
+// @Failure		400				{object}	errorResponse
+// @Failure		500				{object}	errorResponse
+//
+//	@Security		ApiKeyAuth
+//
+// @Router			/admin/moderation/all [get]
 func (h *handler) showContentToModerate(c *gin.Context) {
 	limit := c.Query("limit")
 	offset := c.Query("offset")
@@ -21,6 +34,18 @@ func (h *handler) showContentToModerate(c *gin.Context) {
 	c.JSON(http.StatusOK, allEntries)
 }
 
+// @Summary Moderation details
+// @Description Get details of a specific moderation item
+// @ID moderation-content
+// @Tags moderation
+// @Accept  json
+// @Produce  json
+// @Param moderation_id path string true "Moderation ID"
+// @Success 200 {object} models.ModerationTextDetails
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router /admin/moderation/{moderation_id} [get]
 func (h *handler) moderationText(c *gin.Context) {
 	modId := c.Param("moderation_id")
 
@@ -33,6 +58,18 @@ func (h *handler) moderationText(c *gin.Context) {
 	c.JSON(http.StatusOK, details)
 }
 
+// @Summary Approve provided text content
+// @Description Admin can approve this content and it appear in global text storage
+// @ID moderation-approve
+// @Tags moderation
+// @Accept  json
+// @Produce  json
+// @Param moderation_id path string true "Moderation ID"
+// @Success 200
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router /admin/moderation/content/{moderation_id}/approve [POST]
 func (h *handler) approveContent(c *gin.Context) {
 	modId := c.Param("moderation_id")
 
@@ -45,6 +82,19 @@ func (h *handler) approveContent(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// @Summary Reject provided content
+// @Description Admin can reject some content because of problem in content
+// @ID moderation-reject
+// @Tags moderation
+// @Accept  json
+// @Produce  json
+// @Param moderation_id path string true "Moderation ID"
+// @Param models.ModerationRejectToService body models.ModerationRejectToService true "Reject"
+// @Success 200
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router /admin/moderation/content/{moderation_id}/reject [POST]
 func (h *handler) rejectContent(c *gin.Context) {
 	modId := c.Param("moderation_id")
 

@@ -25,6 +25,7 @@ func TokenVerifier() gin.HandlerFunc {
 		if token == "" {
 			c.Set("Role", guest)
 			c.Next()
+			return
 		}
 
 		claim := &tokenClaims{}
@@ -54,6 +55,5 @@ func TokenVerifier() gin.HandlerFunc {
 		c.Set("ID", claims.ID)
 		c.Set("Role", claims.Role)
 		c.Next()
-		return
 	}
 }

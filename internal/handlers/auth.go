@@ -182,7 +182,6 @@ func (h *handler) logOut(c *gin.Context) {
 // @Success		201				{object}	models.AuthResponse
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
-// @Security		Bearer
 // @Router			/api/auth/refresh [post]
 func (h *handler) refresh(c *gin.Context) {
 
