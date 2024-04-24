@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/MamushevArup/typeracer/adapters/avatar/aws"
 	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/MamushevArup/typeracer/internal/services/admin"
@@ -20,13 +21,13 @@ type Service struct {
 	Admin      admin.Admin
 }
 
-func NewService(repo *repository.Repo, cfg *config.Config) *Service {
+func NewService(repo *repository.Repo, cfg *config.Config, s3 aws.CloudService) *Service {
 	return &Service{
 		Single:     single.NewPracticeY(repo),
 		Contribute: contribute.NewContribute(repo),
 		Auth:       auth.NewAuth(repo, cfg),
 		Multiple:   race.NewMultiple(repo, cfg),
 		Link:       link.NewLink(repo),
-		Admin:      admin.New(repo),
+		Admin:      admin.New(repo, s3),
 	}
 }

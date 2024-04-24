@@ -36,7 +36,7 @@ func (a *auth) InsertUser(ctx context.Context, racerAuth models.RacerAuth) error
 		return err
 	}
 
-	if !exec.Insert() {
+	if exec.RowsAffected() == 0 {
 		a.lg.Errorf("can't insert to the racer database user=%v", r.ID)
 		return fmt.Errorf("fail insert to the racer database")
 	}

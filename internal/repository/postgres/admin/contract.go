@@ -15,6 +15,7 @@ type Moderation interface {
 	ApproveContent(ctx context.Context, transaction models.TextAcceptTransaction) error
 	DeleteModerationText(ctx context.Context, modId uuid.UUID) error
 	RejectContent(ctx context.Context, reject models.ModerationRejectToRepo) error
+	InsertAvatarURL(ctx context.Context, url string) (bool, error)
 }
 
 type repo struct {

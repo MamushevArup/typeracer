@@ -101,7 +101,6 @@ func (h *handler) raceTrack(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	connections, _ := h.joinRacers(conn, link, id.(string))
 
 	// channels to receive messages from the client to calculate the current speed of the racer
@@ -173,7 +172,6 @@ func (h *handler) raceTrack(c *gin.Context) {
 							log.Printf("error closing connection %v", err)
 						}
 					}(conn)
-
 					defer close(endRaceResult)
 					defer close(currSpeedCh)
 					defer close(errorCh)

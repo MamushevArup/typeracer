@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/MamushevArup/typeracer/adapters/avatar/aws"
 	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/handlers"
 	"github.com/MamushevArup/typeracer/internal/lib/http/server"
@@ -62,12 +63,12 @@ func main() {
 
 	repo := repository.NewRepo(lg, db)
 
-	//s3, err := aws.New(cfg)
-	//if err != nil {
-	//	lg.Fatalf("fail with external api init due to err=%v", err)
-	//}
+	s3, err := aws.New(cfg)
+	if err != nil {
+		lg.Fatalf("fail with external api init due to err=%v", err)
+	}
 
-	svc := services.NewService(repo, cfg)
+	svc := services.NewService(repo, cfg, s3)
 
 	handler := handlers.NewHandler(svc, cfg)
 
@@ -97,13 +98,7 @@ func main() {
 	// Waiting for SIGINT (pkill -2)
 	<-stop
 
-	ctxShutDown, cancel := context.WithTimeout(context.Background(), contextTimeout)
-	defer func() {
-		// extra handling here
-		cancel()
-	}()
-
-	if err = srv.Shutdown(ctxShutDown); err != nil {
+	if err = srv.Shutdown(ctx); err != nil {
 		lg.Errorf("unable to shutdown server %v", err)
 	}
 

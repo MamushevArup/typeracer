@@ -54,6 +54,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 			}
 
 		}
+		moder.POST("/add-cars", h.addCars)
 	}
 
 	sgl := router.Group("/single")

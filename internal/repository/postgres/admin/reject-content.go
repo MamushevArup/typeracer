@@ -33,7 +33,7 @@ func (r *repo) RejectContent(ctx context.Context, reject models.ModerationReject
 		return fmt.Errorf("fail reject content err=%w", err)
 	}
 
-	if !upd.Update() {
+	if upd.RowsAffected() == 0 {
 		r.lg.Errorf("unable update content, mod_id=%v", reject.ModerationID)
 		return fmt.Errorf("error with updating content")
 	}
@@ -55,7 +55,7 @@ func (r *repo) RejectContent(ctx context.Context, reject models.ModerationReject
 		return fmt.Errorf("fail insert rejected err=%w", err)
 	}
 
-	if !inst.Insert() {
+	if inst.RowsAffected() == 0 {
 		r.lg.Errorf("unable insert rejected, mod_id=%v", reject.ModerationID)
 		return fmt.Errorf("error with inserting rejected")
 	}

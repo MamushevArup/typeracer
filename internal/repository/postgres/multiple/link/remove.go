@@ -27,7 +27,7 @@ func (l *link) Remove(ctx context.Context, currentTime time.Time) error {
 		return fmt.Errorf("fail to update expiry %w", err)
 	}
 
-	if !commandTag.Update() {
+	if commandTag.RowsAffected() == 0 {
 		return fmt.Errorf("fail to update expiry")
 	}
 

@@ -78,7 +78,7 @@ func (a *auth) UpdateRefresh(ctx context.Context, id, refreshNew string) error {
 		return fmt.Errorf("fail to update admin %w", err)
 	}
 
-	if !updated.Update() {
+	if updated.RowsAffected() == 0 {
 		a.lg.Errorf("can't update admin, id=%v, err=%v", id, err)
 		return fmt.Errorf("fail to update admin %w", err)
 	}
