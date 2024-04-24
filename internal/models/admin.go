@@ -11,7 +11,7 @@ type AdminSignIn struct {
 	Fingerprint string `json:"fingerprint"`
 }
 
-type AdminSignInResponse struct {
+type AdminSignInRefresh struct {
 	Access string `json:"access"`
 }
 

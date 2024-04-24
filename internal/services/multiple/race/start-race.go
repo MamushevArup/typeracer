@@ -52,12 +52,18 @@ func (s *service) Join(id string, conn *websocket.Conn, link string) (*[]*websoc
 		tempUid, err2 := uuid.NewUUID()
 		if err2 != nil {
 			log.Println(err2)
-			return nil, models.RacerM{}, err2
+			return nil, models.RacerM{}, fmt.Errorf("unable to generate uuid for guest %w", err2)
+		}
+
+		ava, err := s.repo.Multiple.GuestAvatar(ctx)
+		if err != nil {
+			return nil, models.RacerM{}, fmt.Errorf("unable to get guest avatar due to %w", err)
 		}
 
 		return &s.connections, models.RacerM{
-			Role:  "guest",
-			Email: tempUid.String(),
+			Email:    tempUid.String(),
+			Username: "guest",
+			Avatar:   ava,
 		}, nil
 
 	}

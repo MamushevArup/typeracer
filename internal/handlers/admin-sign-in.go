@@ -60,7 +60,7 @@ func (h *handler) adminSignIn(c *gin.Context) {
 // @ID				refresh_admin
 // @Accept			json
 // @Produce		json
-// @Success		201				{object}	models.AdminSignInResponse
+// @Success		201				{object}	models.AdminSignInRefresh
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
 // @Router			/admin/auth/refresh [post]
@@ -80,5 +80,5 @@ func (h *handler) adminRefresh(c *gin.Context) {
 
 	c.SetCookie(cookieName, refresh, maxAge, "/admin", domain, false, true)
 
-	c.JSON(http.StatusCreated, models.AdminSignInResponse{Access: access})
+	c.JSON(http.StatusCreated, models.AdminSignInRefresh{Access: access})
 }

@@ -15,7 +15,7 @@ func (m *multiple) User(ctx context.Context, id uuid.UUID) (models.RacerM, error
 
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	query, args, err := sq.
-		Select("email, username, url as avatar, role").
+		Select("email, username, url as avatar").
 		From("racer").
 		Join("avatar a on racer.avatar_id = a.id").
 		Where("racer.id = ?", id).
@@ -25,12 +25,11 @@ func (m *multiple) User(ctx context.Context, id uuid.UUID) (models.RacerM, error
 		return racer, fmt.Errorf("fail to construct query user=%v, err=%w", id, err)
 	}
 
-	err = m.db.QueryRow(ctx, query, args...).Scan(&racer.Email, &racer.Username, &racer.Avatar, &racer.Role)
+	err = m.db.QueryRow(ctx, query, args...).Scan(&racer.Email, &racer.Username, &racer.Avatar)
 	if err != nil {
 		return racer, fmt.Errorf("fail to get user info user=%v, err=%w", id, err)
 	}
 
-	m.lg.Infof("racer %v", racer)
 	return racer, nil
 }
 

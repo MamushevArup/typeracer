@@ -16,6 +16,7 @@ type Multiple interface {
 	RacerID(ctx context.Context, email string) (uuid.UUID, error)
 	InsertSession(ctx context.Context, r *models.RacerRepoM) error
 	UpdateRacerHistory(ctx context.Context, currSpeed int, racerID, textID uuid.UUID) error
+	GuestAvatar(ctx context.Context) (string, error)
 }
 
 type multiple struct {

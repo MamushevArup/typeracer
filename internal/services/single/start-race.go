@@ -14,7 +14,11 @@ func (s *service) StartRace(ctx context.Context, userId string) (models.SingleRe
 	var err error
 
 	if userId == guest {
-		sgl.RacerInfo.Avatar = "random_string_from_aws"
+		ava, err := s.repo.Starter.GuestAvatar(ctx)
+		if err != nil {
+			return sgl, fmt.Errorf("unable to get guest avatar due to %w", err)
+		}
+		sgl.RacerInfo.Avatar = ava
 		sgl.RacerInfo.Username = guest
 	} else {
 

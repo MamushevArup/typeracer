@@ -11,7 +11,7 @@ import (
 type Starter interface {
 	RacerInfo(ctx context.Context, id uuid.UUID) (models.RacerInfo, error)
 	TextInfo(ctx context.Context) (models.TextInfo, error)
-
+	GuestAvatar(ctx context.Context) (string, error)
 	EndSingleRace(ctx context.Context, req models.RespEndSingle) error
 	GetTextLen(ctx context.Context, textID uuid.UUID) (int, error)
 	RacerExist(ctx context.Context, id uuid.UUID) (bool, error)
