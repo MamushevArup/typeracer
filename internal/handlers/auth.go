@@ -29,7 +29,7 @@ const (
 // @Accept			json
 // @Produce		json
 // @Param			models.SignIn	body		models.SignIn	true	"Sign In"
-// @Success		201				{object}	models.AuthResponse
+// @Success		201				{object}	models.SignInHandler
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
 // @Router			/api/auth/sign-in [post]
@@ -51,18 +51,21 @@ func (h *handler) signIn(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.service.Auth.SignIn(c, sign.Email, sign.Password, sign.Fingerprint)
+	rInfo, err := h.service.Auth.SignIn(c, sign.Email, sign.Password, sign.Fingerprint)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var a models.AuthResponse
-	a.Access = access
+	showInfo := models.SignInHandler{
+		Access:   rInfo.Access,
+		Username: rInfo.Username,
+		Avatar:   rInfo.Avatar,
+	}
 
-	c.SetCookie(cookieName, refresh, maxAge, path, domain, false, true)
+	c.SetCookie(cookieName, rInfo.Refresh, maxAge, path, domain, false, true)
 
-	c.JSONP(http.StatusOK, a)
+	c.JSONP(http.StatusOK, showInfo)
 }
 
 // @Summary		Sign up
@@ -72,7 +75,7 @@ func (h *handler) signIn(c *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Param			models.SignUp	body		models.SignUp	true	"Sign Up"
-// @Success		201				{object}	models.AuthResponse
+// @Success		201				{object}	models.SignUpHandler
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
 // @Router			/api/auth/sign-up [post]
@@ -95,24 +98,26 @@ func (h *handler) signUp(c *gin.Context) {
 		return
 	}
 
-	err = h.service.Auth.CheckUserSignUp(c, s.Email, s.Password)
+	err = h.service.Auth.CheckUserSignUp(c, s.Email)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	access, refresh, err := h.service.Auth.SignUp(c, s.Email, s.Username, s.Password, s.Fingerprint)
+	resp, err := h.service.Auth.SignUp(c, s.Email, s.Username, s.Password, s.Fingerprint)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var a models.AuthResponse
-	a.Access = access
+	handlerConv := models.SignUpHandler{
+		Access: resp.Access,
+		Avatar: resp.Avatar,
+	}
 
-	c.SetCookie(cookieName, refresh, maxAge, path, domain, false, true)
+	c.SetCookie(cookieName, resp.Refresh, maxAge, path, domain, false, true)
 
-	c.JSON(http.StatusCreated, a)
+	c.JSON(http.StatusCreated, handlerConv)
 }
 
 func emailAndPasswdValidation(email, password string) error {

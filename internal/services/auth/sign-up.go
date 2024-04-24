@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"strings"
 	"time"
 )
@@ -16,7 +18,7 @@ type tokenClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprint string) (string, string, error) {
+func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprint string) (models.SignUpService, error) {
 	// Sign up accept email, username, password after pass validation and check user existence if user doesn't exist
 	// we provide endpoint/refresh token with role and id inside
 	// endpoint token live 30 minute refresh token live 60 day
@@ -26,7 +28,7 @@ func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprin
 
 	userId, err := uuid.NewUUID()
 	if err != nil {
-		return "", "", fmt.Errorf("unable to generate uuid %w", err)
+		return models.SignUpService{}, fmt.Errorf("unable to generate uuid %w", err)
 	}
 
 	email = strings.ToLower(email)
@@ -36,17 +38,17 @@ func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprin
 	// cipher password using bcrypt
 	hashPasswd, err := a.generateHashPassword(password)
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return models.SignUpService{}, fmt.Errorf("%w", err)
 	}
 
 	access, err := a.generateAccessToken(userId.String(), role)
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return models.SignUpService{}, fmt.Errorf("%w", err)
 	}
 
 	refresh, err := a.generateRefreshToken()
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return models.SignUpService{}, fmt.Errorf("%w", err)
 	}
 
 	racer.ID = userId
@@ -61,22 +63,36 @@ func (a *auth) SignUp(ctx context.Context, email, username, password, fingerprin
 
 	err = a.repo.Auth.InsertUser(ctx, racer)
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return models.SignUpService{}, fmt.Errorf("%w", err)
 	}
 
-	return access, refresh, nil
+	avatarImage, err := a.repo.Auth.UserAvatar(ctx, email)
+	if err != nil {
+		return models.SignUpService{}, fmt.Errorf("%w", err)
+	}
+
+	res := models.SignUpService{
+		Access:  access,
+		Avatar:  avatarImage,
+		Refresh: refresh,
+	}
+
+	return res, nil
 }
 
-func (a *auth) CheckUserSignUp(ctx context.Context, email, password string) error {
+func (a *auth) CheckUserSignUp(ctx context.Context, email string) error {
 	// check user exist if so redirect to the sign in else generate token
 	email = strings.ToLower(email)
 
 	byEmail, err := a.repo.Auth.UserByEmail(ctx, email)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
 		return fmt.Errorf("%w", err)
 	}
 
-	if byEmail {
+	if byEmail == nil {
 		return fmt.Errorf("account with this email already created use sign-in")
 	}
 

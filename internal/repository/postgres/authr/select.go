@@ -3,35 +3,37 @@ package authr
 import (
 	"context"
 	"fmt"
+	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
 
-func (a *auth) UserByEmail(ctx context.Context, email string) (bool, error) {
+func (a *auth) UserByEmail(ctx context.Context, email string) (*models.SignInService, error) {
 	a.lg.Info("in user by email method repo layer")
+
+	var racerInfo models.SignInService
 
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	sql, args, err := sq.
-		Select("COUNT(*)").
+		Select("username, url").
 		From("racer").
+		Join("avatar on avatar.id=racer.avatar_id").
 		Where(squirrel.Eq{"email": email}).
 		ToSql()
 
 	if err != nil {
 		a.lg.Errorf("can't build query user=%v, err=%v", email, err)
-		return false, fmt.Errorf("can't build query: %w", err)
+		return &racerInfo, fmt.Errorf("can't build query: %w", err)
 	}
 
-	var racers int
-
-	err = a.db.QueryRow(ctx, sql, args...).Scan(&racers)
+	err = a.db.QueryRow(ctx, sql, args...).Scan(&racerInfo.Username, &racerInfo.Avatar)
 	if err != nil {
 		a.lg.Errorf("can't get racer data email=%v, err=%v", email, err)
-		return false, fmt.Errorf("fail get racer data: %w", err)
+		return &racerInfo, fmt.Errorf("fail get racer data: %w", err)
 	}
 
-	return racers == 1, nil
+	return &racerInfo, nil
 }
 
 func (a *auth) GetUserPasswordByEmail(ctx context.Context, email string) (uuid.UUID, string, string, error) {

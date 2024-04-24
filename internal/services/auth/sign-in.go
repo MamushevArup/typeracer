@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (string, string, error) {
+func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) (*models.SignInService, error) {
 
 	adminUsername := a.cfg.Admin.Username
 	adminPassword := a.cfg.Admin.Password
@@ -18,19 +18,26 @@ func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) 
 	if email == adminUsername && password == adminPassword {
 		access, err := a.generateAccessToken("1", "admin")
 		if err != nil {
-			return "", "", fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("%w", err)
 		}
 		refresh, err := a.generateRefreshToken()
 		if err != nil {
-			return "", "", fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		err = a.repo.Auth.UpdateAdmin(ctx, adminUsername, refresh)
 		if err != nil {
-			return "", "", fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("%w", err)
 		}
 
-		return access, refresh, nil
+		adminInfo := &models.SignInService{
+			Access:   access,
+			Refresh:  refresh,
+			Username: "admin",
+			Avatar:   "",
+		}
+
+		return adminInfo, nil
 	}
 
 	var r models.RacerAuth
@@ -40,30 +47,30 @@ func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) 
 
 	bytePass := []byte(password)
 
-	byEmail, err := a.repo.Auth.UserByEmail(ctx, email)
+	racerInfo, err := a.repo.Auth.UserByEmail(ctx, email)
 	if err != nil {
-		return "", "", fmt.Errorf("unable find user by email=%v, err=%w", email, err)
+		return nil, fmt.Errorf("unable find user by email=%v, err=%w", email, err)
 	}
 
-	if !byEmail {
-		return "", "", fmt.Errorf("user do not exist sign up first")
+	if racerInfo == nil {
+		return nil, fmt.Errorf("user do not exist sign up first")
 	}
 
 	// here I need to make repo call to get password by
 	id, token, pwd, err := a.repo.Auth.GetUserPasswordByEmail(ctx, email)
 	if err != nil {
 		log.Println(err)
-		return "", "", fmt.Errorf("internal error due to password checking err=%w", err)
+		return nil, fmt.Errorf("internal error due to password checking err=%w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(pwd), bytePass)
 	if err != nil {
-		return "", "", fmt.Errorf("password does not match err=%w", err)
+		return nil, fmt.Errorf("password does not match err=%w", err)
 	}
 
 	isActive, err := a.repo.Auth.UserSession(ctx, token, id)
 	if err != nil {
-		return "", "", fmt.Errorf("unable find user session err=%w", err)
+		return nil, fmt.Errorf("unable find user session err=%w", err)
 	}
 
 	r.Fingerprint = fingerprint
@@ -71,18 +78,18 @@ func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) 
 	if isActive {
 		err = a.repo.Auth.DeleteSession(ctx, r.Fingerprint, token)
 		if err != nil {
-			return "", "", fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 
 	access, err := a.generateAccessToken(id.String(), role)
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	refresh, err := a.generateRefreshToken()
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	r.ID = id
@@ -94,8 +101,11 @@ func (a *auth) SignIn(ctx context.Context, email, password, fingerprint string) 
 
 	err = a.repo.Auth.InsertSession(ctx, r)
 	if err != nil {
-		return "", "", fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("%w", err)
 	}
 
-	return access, refresh, nil
+	racerInfo.Access = access
+	racerInfo.Refresh = refresh
+
+	return racerInfo, nil
 }

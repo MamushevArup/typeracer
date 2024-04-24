@@ -13,7 +13,7 @@ import (
 // @Accept			json
 // @Produce		json
 // @Param			models.AdminSignIn	body		models.AdminSignIn	true	"Sign In"
-// @Success		201				{object}	models.AdminSignInResponse
+// @Success		201				{object}	models.SignInHandler
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
 //
@@ -36,15 +36,21 @@ func (h *handler) adminSignIn(c *gin.Context) {
 		return
 	}
 
-	accessT, refresh, err := h.service.Auth.SignIn(c, sign.Username, sign.Password, sign.Fingerprint)
+	adminInfo, err := h.service.Auth.SignIn(c, sign.Username, sign.Password, sign.Fingerprint)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.SetCookie(cookieName, refresh, maxAge, "/admin", domain, false, true)
+	ad := models.SignInHandler{
+		Access:   adminInfo.Access,
+		Username: adminInfo.Username,
+		Avatar:   "",
+	}
 
-	c.JSON(http.StatusOK, models.AdminSignInResponse{Access: accessT})
+	c.SetCookie(cookieName, adminInfo.Refresh, maxAge, "/admin", domain, false, true)
+
+	c.JSON(http.StatusOK, ad)
 
 }
 

@@ -21,8 +21,8 @@ func (a *auth) InsertUser(ctx context.Context, racerAuth models.RacerAuth) error
 
 	sql, args, err := sq.
 		Insert("racer").
-		Columns("id", "email", "password", "username", "created_at", "last_login", "refresh_token", "role").
-		Values(r.ID, r.Email, r.Password, r.Username, r.CreatedAt, r.LastLogin, r.RefreshToken, r.Role).
+		Columns("id", "email", "password", "username", "created_at", "last_login", "refresh_token", "role", "avatar_id").
+		Values(r.ID, r.Email, r.Password, r.Username, r.CreatedAt, r.LastLogin, r.RefreshToken, r.Role, 1).
 		ToSql()
 
 	if err != nil {

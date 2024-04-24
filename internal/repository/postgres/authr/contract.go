@@ -10,7 +10,7 @@ import (
 
 type Auth interface {
 	GetUserPasswordByEmail(ctx context.Context, email string) (uuid.UUID, string, string, error)
-	UserByEmail(ctx context.Context, email string) (bool, error)
+	UserByEmail(ctx context.Context, email string) (*models.SignInService, error)
 	InsertUser(ctx context.Context, racerAuth models.RacerAuth) error
 	DeleteSession(ctx context.Context, fng, refresh string) error
 	InsertSession(ctx context.Context, r models.RacerAuth) error
@@ -20,6 +20,7 @@ type Auth interface {
 	UpdateAdmin(ctx context.Context, username, refresh string) error
 	AdminByRefresh(ctx context.Context, refresh string) (string, error)
 	UpdateRefresh(ctx context.Context, id, refreshNew string) error
+	UserAvatar(ctx context.Context, email string) (string, error)
 }
 
 type auth struct {
