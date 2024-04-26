@@ -16,6 +16,7 @@ type Practice interface {
 	EndRace(ctx context.Context, req models.ReqEndSingle) (models.RespEndSingle, error)
 	RacerExists(ctx context.Context, racerId string) (bool, error)
 	RealTimeCalc(ctx context.Context, currentSymbol, duration int) (int, error)
+	GuestCalculate(ctx context.Context, duration, errors, length int) (models.RespEndSingle, error)
 }
 
 type service struct {

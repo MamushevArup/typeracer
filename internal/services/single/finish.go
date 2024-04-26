@@ -30,3 +30,17 @@ func (s *service) EndRace(ctx context.Context, req models.ReqEndSingle) (models.
 
 	return resp, nil
 }
+
+func (s *service) GuestCalculate(ctx context.Context, duration, errors, length int) (models.RespEndSingle, error) {
+	var resp models.RespEndSingle
+
+	if length < errors {
+		return resp, fmt.Errorf("errors greater than text length -> errors : %v, length :%v", errors, length)
+	}
+
+	resp.Wpm = int(countWPM(length, duration))
+	resp.Accuracy = calcAccuracy(errors, length)
+	resp.StartedTime = calculateStartTime(time.Now(), duration)
+
+	return resp, nil
+}

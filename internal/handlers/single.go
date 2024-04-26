@@ -148,28 +148,34 @@ func (h *handler) endRace(c *gin.Context) {
 		return
 	}
 
-	ex, err := h.service.Single.RacerExists(c, id.(string))
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	if !ex {
-		newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
-		return
-	}
+	var race models.RespEndSingle
+	var err error
+	if id == "guest" {
+		race, err = h.service.Single.GuestCalculate(c, req.Duration, req.Errors, req.Length)
+	} else {
+		ex, err = h.service.Single.RacerExists(c, id.(string))
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if !ex {
+			newErrorResponse(c, http.StatusNotFound, "racer doesn't exist")
+			return
+		}
 
-	uid, err := uuid.Parse(id.(string))
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
+		uid, err := uuid.Parse(id.(string))
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	req.RacerId = uid
+		req.RacerId = uid
 
-	race, err := h.service.Single.EndRace(c, req)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
+		race, err = h.service.Single.EndRace(c, req)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	c.JSON(http.StatusCreated, &race)
