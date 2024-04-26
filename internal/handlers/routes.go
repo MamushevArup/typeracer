@@ -17,10 +17,14 @@ func (h *handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type"},
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
+		AllowHeaders:     []string{"Content-Type", "Authorization", "Origin", "X-Requested-With", "X-Access-Token", "X-Refresh-Token"},
 		AllowCredentials: true,
+		MaxAge:           0,
+		AllowWildcard:    true,
+		AllowWebSockets:  true,
+		AllowFiles:       true,
 	}))
 
 	router.Use(validation.TokenInspector(h.cfg))
@@ -64,9 +68,6 @@ func (h *handler) InitRoutes() *gin.Engine {
 		sgl.POST("/end-race", h.endRace)
 		sgl.POST("/curr-wpm", h.currWPM)
 	}
-
-	//router.POST("/contribute", h.contribute)
-	//router.GET("/moderation/:id", h.moderation)
 
 	auth := router.Group("/api/auth")
 
