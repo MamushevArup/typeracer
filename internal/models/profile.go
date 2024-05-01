@@ -39,3 +39,15 @@ type AvatarUpdate struct {
 	Id      int    `json:"id"`
 	RacerId string `json:"-"`
 }
+
+type RacerUpdate struct {
+	Id       string
+	Email    string `json:"email" valid:"email,optional"`
+	Username string `json:"username" valid:"optional~Username is required,matches(^[a-zA-Z0-9]+$)~Username must consist only of ASCII letters and digits"`
+}
+
+type RacerUpdateRepo struct {
+	Id       uuid.UUID
+	Email    string
+	Username string
+}
