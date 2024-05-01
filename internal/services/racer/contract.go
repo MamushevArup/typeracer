@@ -8,6 +8,7 @@ import (
 
 type Profile interface {
 	Details(ctx context.Context, racerId string) (models.RacerHandler, error)
+	Avatars(ctx context.Context) ([]models.Avatar, error)
 }
 
 type service struct {

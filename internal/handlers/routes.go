@@ -90,6 +90,8 @@ func (h *handler) InitRoutes() *gin.Engine {
 	profile.Use(access.OnlyRacer())
 	{
 		profile.GET("/info", h.profileInfo)
+		profile.GET("/avatars", h.avatars)
+		profile.
 	}
 
 	return router

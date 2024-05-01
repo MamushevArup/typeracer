@@ -10,6 +10,7 @@ import (
 
 type Profile interface {
 	Info(ctx context.Context, racerId uuid.UUID) (models.RacerRepository, error)
+	SelectAvatar(ctx context.Context) ([]models.Avatar, error)
 }
 
 type repo struct {

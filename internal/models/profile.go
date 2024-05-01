@@ -21,3 +21,8 @@ type RacerRepository struct {
 	BestSpeed     int       `db:"best_speed"`
 	Races         int       `db:"races"`
 }
+
+type Avatar struct {
+	Id  int    `json:"id"`
+	Url string `db:"url" json:"url"`
+}
