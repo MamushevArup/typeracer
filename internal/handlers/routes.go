@@ -86,5 +86,11 @@ func (h *handler) InitRoutes() *gin.Engine {
 		mlt.GET("/race/:link", validationWs.TokenVerifier(h.cfg), h.raceTrack)
 	}
 
+	profile := router.Group("/profile")
+	profile.Use(access.OnlyRacer())
+	{
+		profile.GET("/info", h.profileInfo)
+	}
+
 	return router
 }

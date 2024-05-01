@@ -16,3 +16,12 @@ func OnlyGuestOrRacer() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func OnlyRacer() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.MustGet("Role") != "racer" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "unauthorized access"})
+			return
+		}
+	}
+}

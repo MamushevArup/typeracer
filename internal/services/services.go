@@ -9,6 +9,7 @@ import (
 	"github.com/MamushevArup/typeracer/internal/services/contribute"
 	"github.com/MamushevArup/typeracer/internal/services/multiple/link"
 	"github.com/MamushevArup/typeracer/internal/services/multiple/race"
+	"github.com/MamushevArup/typeracer/internal/services/racer"
 	"github.com/MamushevArup/typeracer/internal/services/single"
 )
 
@@ -19,6 +20,7 @@ type Service struct {
 	Multiple   race.Racer
 	Link       link.Checker
 	Admin      admin.Admin
+	Racer      racer.Profile
 }
 
 func NewService(repo *repository.Repo, cfg *config.Config, s3 aws.CloudService) *Service {
@@ -29,5 +31,6 @@ func NewService(repo *repository.Repo, cfg *config.Config, s3 aws.CloudService) 
 		Multiple:   race.NewMultiple(repo, cfg),
 		Link:       link.NewLink(repo),
 		Admin:      admin.New(repo, s3),
+		Racer:      racer.New(repo),
 	}
 }

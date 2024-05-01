@@ -6,12 +6,11 @@ import (
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/contributor"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/multiple/link"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/multiple/race"
+	"github.com/MamushevArup/typeracer/internal/repository/postgres/racer"
 	"github.com/MamushevArup/typeracer/internal/repository/postgres/single"
 	"github.com/MamushevArup/typeracer/pkg/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-// TODO for the future bring here squirrel for query building
 
 type Repo struct {
 	Starter     single.Starter
@@ -20,6 +19,7 @@ type Repo struct {
 	Link        link.Manager
 	Multiple    race.Multiple
 	Admin       admin.Moderation
+	Racer       racer.Profile
 }
 
 func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
@@ -30,5 +30,6 @@ func NewRepo(lg *logger.Logger, db *pgxpool.Pool) *Repo {
 		Link:        link.NewManager(db, lg),
 		Multiple:    race.NewRace(lg, db),
 		Admin:       admin.NewModeration(db, lg),
+		Racer:       racer.New(db, lg),
 	}
 }
