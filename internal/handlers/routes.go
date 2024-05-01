@@ -91,7 +91,10 @@ func (h *handler) InitRoutes() *gin.Engine {
 	{
 		profile.GET("/info", h.profileInfo)
 		profile.GET("/avatars", h.avatars)
-		profile.
+		avatar := profile.Group("/avatar")
+		{
+			avatar.PUT("/update", h.updateAvatar)
+		}
 	}
 
 	return router

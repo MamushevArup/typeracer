@@ -9,6 +9,7 @@ import (
 type Profile interface {
 	Details(ctx context.Context, racerId string) (models.RacerHandler, error)
 	Avatars(ctx context.Context) ([]models.Avatar, error)
+	UpdateAvatar(ctx context.Context, avatar models.AvatarUpdate) error
 }
 
 type service struct {

@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type RacerHandler struct {
 	Username      string `json:"username"`
@@ -24,5 +27,15 @@ type RacerRepository struct {
 
 type Avatar struct {
 	Id  int    `json:"id"`
-	Url string `db:"url" json:"url"`
+	Url string `json:"url"`
+}
+
+type AvatarUpdateRepo struct {
+	Id      int
+	RacerID uuid.UUID
+}
+
+type AvatarUpdate struct {
+	Id      int    `json:"id"`
+	RacerId string `json:"-"`
 }
