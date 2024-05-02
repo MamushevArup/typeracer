@@ -13,6 +13,7 @@ type Profile interface {
 	SelectAvatar(ctx context.Context) ([]models.Avatar, error)
 	UpdateAvatar(ctx context.Context, avatar models.AvatarUpdateRepo) error
 	UpdateRacer(ctx context.Context, racer models.RacerUpdateRepo) error
+	SingleHistoryRows(ctx context.Context, racerId uuid.UUID, limit, offset int) ([]models.SingleHistory, error)
 }
 
 type repo struct {

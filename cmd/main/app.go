@@ -49,7 +49,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("error due to: %v", err)
 	}
-	// postgres://username:password@localhost:5432/database_name
 
 	lg := logger.New()
 

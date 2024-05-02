@@ -11,6 +11,7 @@ type Profile interface {
 	Avatars(ctx context.Context) ([]models.Avatar, error)
 	UpdateAvatar(ctx context.Context, avatar models.AvatarUpdate) error
 	UpdateRacerInfo(ctx context.Context, racer models.RacerUpdate) error
+	SingleHistory(ctx context.Context, id, limit, offset string) ([]models.SingleHistoryHandler, error)
 }
 
 type service struct {

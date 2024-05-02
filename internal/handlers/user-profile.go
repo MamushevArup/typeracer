@@ -55,3 +55,18 @@ func (h *handler) updateProfile(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *handler) singleHistory(c *gin.Context) {
+	id := c.MustGet("ID")
+
+	limit := c.Query("limit")
+	offset := c.Query("offset")
+
+	sglHistory, err := h.service.Racer.SingleHistory(c.Request.Context(), id.(string), limit, offset)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, sglHistory)
+}

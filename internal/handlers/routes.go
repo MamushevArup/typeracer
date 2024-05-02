@@ -96,6 +96,11 @@ func (h *handler) InitRoutes() *gin.Engine {
 		{
 			avatar.PUT("/update", h.updateAvatar)
 		}
+		history := profile.Group("/history")
+		{
+			history.GET("/single", h.singleHistory)
+
+		}
 	}
 
 	return router
