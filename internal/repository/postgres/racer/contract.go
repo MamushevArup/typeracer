@@ -14,6 +14,7 @@ type Profile interface {
 	UpdateAvatar(ctx context.Context, avatar models.AvatarUpdateRepo) error
 	UpdateRacer(ctx context.Context, racer models.RacerUpdateRepo) error
 	SingleHistoryRows(ctx context.Context, racerId uuid.UUID, limit, offset int) ([]models.SingleHistory, error)
+	SelectHistoryText(ctx context.Context, racerUUID, singleID uuid.UUID) (models.SingleHistoryText, error)
 }
 
 type repo struct {

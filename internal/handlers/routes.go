@@ -17,7 +17,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
 		AllowHeaders:     []string{"Content-Type", "Authorization", "Origin", "X-Requested-With", "X-Access-Token", "X-Refresh-Token"},
 		AllowCredentials: true,
@@ -99,7 +99,7 @@ func (h *handler) InitRoutes() *gin.Engine {
 		history := profile.Group("/history")
 		{
 			history.GET("/single", h.singleHistory)
-
+			history.GET("/details/:single_id", h.singleHistoryText)
 		}
 	}
 

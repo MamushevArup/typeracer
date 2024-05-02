@@ -14,8 +14,8 @@ import (
 
 type Repo struct {
 	Starter     single.Starter
-	Contributor contributor.Contributor
 	Auth        authr.Auth
+	Contributor contributor.Contributor
 	Link        link.Manager
 	Multiple    race.Multiple
 	Admin       admin.Moderation

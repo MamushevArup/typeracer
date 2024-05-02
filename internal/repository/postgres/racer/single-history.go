@@ -13,10 +13,10 @@ func (r *repo) SingleHistoryRows(ctx context.Context, racerId uuid.UUID, limit, 
 	sq := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	sql, args, err := sq.
-		Select("id", "speed", "duration", "accuracy", "started_time").
+		Select("id", "speed", "duration", "accuracy", "start_time").
 		From("single").
 		Where(squirrel.Eq{"racer_id": racerId}).
-		OrderBy("started_time DESC").
+		OrderBy("start_time DESC").
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).
 		ToSql()

@@ -20,3 +20,11 @@ type SingleHistoryHandler struct {
 	Accuracy  float64   `json:"accuracy"`
 	StartedAt string    `json:"started_at"`
 }
+
+type SingleHistoryText struct {
+	Content     string `json:"content"`
+	Author      string `json:"author"`
+	Source      string `json:"source"`
+	SourceTitle string `json:"source_title"`
+	Contributor string `json:"contributor"`
+}

@@ -4,6 +4,7 @@ import (
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 )
 
@@ -69,4 +70,27 @@ func (h *handler) singleHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sglHistory)
+}
+
+func (h *handler) singleHistoryText(c *gin.Context) {
+	id := c.MustGet("ID")
+	sId := c.Param("single_id")
+
+	sUUID, err := uidVerifyAndConvert(sId)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	sglHistoryText, err := h.service.Racer.HistorySingleText(c.Request.Context(), id.(string), sUUID)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, sglHistoryText)
+}
+
+func uidVerifyAndConvert(s string) (uuid.UUID, error) {
+	return uuid.Parse(s)
 }

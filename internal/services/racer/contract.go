@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
+	"github.com/google/uuid"
 )
 
 type Profile interface {
@@ -12,6 +13,7 @@ type Profile interface {
 	UpdateAvatar(ctx context.Context, avatar models.AvatarUpdate) error
 	UpdateRacerInfo(ctx context.Context, racer models.RacerUpdate) error
 	SingleHistory(ctx context.Context, id, limit, offset string) ([]models.SingleHistoryHandler, error)
+	HistorySingleText(ctx context.Context, racerId string, singleID uuid.UUID) (models.SingleHistoryText, error)
 }
 
 type service struct {
