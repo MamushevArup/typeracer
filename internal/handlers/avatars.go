@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+// @Summary Select avatar
+// @Tags profile
+// @Description select avatar
+// @ID select-avatar
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.Avatar
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/avatars [get]
 func (h *handler) avatars(c *gin.Context) {
 	id := c.MustGet("ID")
 
@@ -28,6 +38,18 @@ func (h *handler) avatars(c *gin.Context) {
 	c.JSON(http.StatusOK, avatars)
 }
 
+// @Summary update avatar
+// @Tags profile
+// @Description update avatar
+// @ID update avatar
+// @Accept json
+// @Produce json
+// @Param models.AvatarUpdate body models.AvatarUpdate true "avatar update info"
+// @Security Bearer
+// @Success 200
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/avatar [put]
 func (h *handler) updateAvatar(c *gin.Context) {
 	id := c.MustGet("ID")
 

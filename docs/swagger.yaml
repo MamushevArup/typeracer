@@ -13,7 +13,7 @@ definitions:
       username:
         type: string
     type: object
-  models.AdminSignInResponse:
+  models.AdminSignInRefresh:
     properties:
       access:
         type: string
@@ -22,6 +22,18 @@ definitions:
     properties:
       access:
         type: string
+    type: object
+  models.Avatar:
+    properties:
+      id:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.AvatarUpdate:
+    properties:
+      id:
+        type: integer
     type: object
   models.ContributeHandlerRequest:
     properties:
@@ -77,6 +89,23 @@ definitions:
       source_title:
         type: string
     type: object
+  models.RacerHandler:
+    properties:
+      avatar:
+        type: string
+      avg_speed:
+        type: integer
+      best_speed:
+        type: integer
+      created_at:
+        type: string
+      last_race_speed:
+        type: integer
+      races:
+        type: integer
+      username:
+        type: string
+    type: object
   models.RacerInfo:
     properties:
       avatar:
@@ -90,7 +119,14 @@ definitions:
         type: string
       email:
         type: string
-      role:
+      username:
+        type: string
+    type: object
+  models.RacerUpdate:
+    properties:
+      email:
+        type: string
+      id:
         type: string
       username:
         type: string
@@ -154,6 +190,32 @@ definitions:
       avatar:
         type: string
     type: object
+  models.SingleHistoryHandler:
+    properties:
+      accuracy:
+        type: number
+      duration:
+        type: integer
+      id:
+        type: string
+      speed:
+        type: integer
+      started_at:
+        type: string
+    type: object
+  models.SingleHistoryText:
+    properties:
+      author:
+        type: string
+      content:
+        type: string
+      contributor:
+        type: string
+      source:
+        type: string
+      source_title:
+        type: string
+    type: object
   models.SingleResponse:
     properties:
       racer:
@@ -205,7 +267,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.AdminSignInResponse'
+            $ref: '#/definitions/models.AdminSignInRefresh'
         "400":
           description: Bad Request
           schema:
@@ -520,6 +582,168 @@ paths:
       summary: Contribute text
       tags:
       - content
+  /profile/avatar:
+    put:
+      consumes:
+      - application/json
+      description: update avatar
+      operationId: update avatar
+      parameters:
+      - description: avatar update info
+        in: body
+        name: models.AvatarUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/models.AvatarUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: update avatar
+      tags:
+      - profile
+  /profile/avatars:
+    get:
+      description: select avatar
+      operationId: select-avatar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Avatar'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Select avatar
+      tags:
+      - profile
+  /profile/history/single/:
+    get:
+      description: single history info
+      operationId: single-history
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SingleHistoryHandler'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: single history info details
+      tags:
+      - history
+  /profile/history/single/{single_id}:
+    get:
+      description: single history text details
+      operationId: single-history-text
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SingleHistoryText'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: single history text details
+      tags:
+      - history
+  /profile/info:
+    get:
+      description: get profile info
+      operationId: get-profile-info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RacerHandler'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: Get profile info
+      tags:
+      - profile
+  /profile/update:
+    put:
+      consumes:
+      - application/json
+      description: update profile
+      operationId: update-profile
+      parameters:
+      - description: racer update info
+        in: body
+        name: models.RacerUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/models.RacerUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - Bearer: []
+      summary: update profile
+      tags:
+      - profile
   /single/curr-wpm:
     post:
       consumes:

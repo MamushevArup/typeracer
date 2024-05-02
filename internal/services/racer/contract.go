@@ -5,6 +5,7 @@ import (
 	"github.com/MamushevArup/typeracer/internal/models"
 	"github.com/MamushevArup/typeracer/internal/repository"
 	"github.com/google/uuid"
+	"sync"
 )
 
 type Profile interface {
@@ -18,6 +19,7 @@ type Profile interface {
 
 type service struct {
 	repo *repository.Repo
+	mu   sync.RWMutex
 }
 
 func New(repo *repository.Repo) Profile {

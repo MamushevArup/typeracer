@@ -10,6 +10,16 @@ import (
 
 var ErrRacerNotFound = "racer not found"
 
+// @Summary Get profile info
+// @Tags profile
+// @Description get profile info
+// @ID get-profile-info
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.RacerHandler
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/info [get]
 func (h *handler) profileInfo(c *gin.Context) {
 	id := c.MustGet("ID")
 
@@ -32,6 +42,18 @@ func (h *handler) profileInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, racerInfo)
 }
 
+// @Summary update profile
+// @Tags profile
+// @Description update profile
+// @ID update-profile
+// @Accept json
+// @Produce json
+// @Param models.RacerUpdate body models.RacerUpdate true "racer update info"
+// @Security Bearer
+// @Success 200
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/update [put]
 func (h *handler) updateProfile(c *gin.Context) {
 	id := c.MustGet("ID")
 
@@ -57,6 +79,16 @@ func (h *handler) updateProfile(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary single history info details
+// @Tags history
+// @Description single history info
+// @ID single-history
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.SingleHistoryHandler
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/history/single/ [get]
 func (h *handler) singleHistory(c *gin.Context) {
 	id := c.MustGet("ID")
 
@@ -72,6 +104,16 @@ func (h *handler) singleHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, sglHistory)
 }
 
+// @Summary single history text details
+// @Tags history
+// @Description single history text details
+// @ID single-history-text
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} models.SingleHistoryText
+// @Failure 404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router /profile/history/single/{single_id} [get]
 func (h *handler) singleHistoryText(c *gin.Context) {
 	id := c.MustGet("ID")
 	sId := c.Param("single_id")

@@ -19,19 +19,17 @@ const (
 	endRace
 )
 
-// createLink unique uuid link for the racetrack. Can lift up to 5 racer for now
-//
-//	@Summary		Create a racetrack
-//	@Tags			multiple
-//	@Description	This endpoint is used to create a racetrack. It generates a unique link for the racetrack and returns it to the user.
-//	@ID				create-racetrack
-//	@Accept			json
-//	@Produce		json
-//	@Success		201	{object}	models.LinkCreation
-//	@Failure		400	{object}	errorResponse
-//	@Failure		500	{object}	errorResponse
-//	@Security		ApiKeyAuth
-//	@Router			/track/link [post]
+// @Summary		Create a racetrack
+// @Tags			multiple
+// @Description	This endpoint is used to create a racetrack. It generates a unique link for the racetrack and returns it to the user.
+// @ID				create-racetrack
+// @Accept			json
+// @Produce		json
+// @Success		201	{object}	models.LinkCreation
+// @Failure		400	{object}	errorResponse
+// @Failure		500	{object}	errorResponse
+// @Security		ApiKeyAuth
+// @Router			/track/link [post]
 func (h *handler) createLink(c *gin.Context) {
 
 	// get value from global auth middleware parsing endpoint token and if token empty user is guest

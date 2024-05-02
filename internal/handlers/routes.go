@@ -92,14 +92,14 @@ func (h *handler) InitRoutes() *gin.Engine {
 		profile.GET("/info", h.profileInfo)
 		profile.GET("/avatars", h.avatars)
 		profile.PUT("/update", h.updateProfile)
-		avatar := profile.Group("/avatar")
-		{
-			avatar.PUT("/update", h.updateAvatar)
-		}
+		profile.PUT("/avatar", h.updateAvatar)
 		history := profile.Group("/history")
 		{
-			history.GET("/single", h.singleHistory)
-			history.GET("/details/:single_id", h.singleHistoryText)
+			single := history.Group("/single")
+			{
+				single.GET("/", h.singleHistory)
+				single.GET("/:single_id", h.singleHistoryText)
+			}
 		}
 	}
 
