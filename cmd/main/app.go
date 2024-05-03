@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/MamushevArup/typeracer/adapters/avatar/aws"
+	"github.com/MamushevArup/typeracer/cmd/migration"
 	"github.com/MamushevArup/typeracer/internal/config"
 	"github.com/MamushevArup/typeracer/internal/handlers"
 	"github.com/MamushevArup/typeracer/internal/lib/http/server"
@@ -46,6 +47,11 @@ func main() {
 	}
 
 	cfg, err := config.New()
+	if err != nil {
+		log.Fatalf("error due to: %v", err)
+	}
+
+	err = migration.Run(cfg)
 	if err != nil {
 		log.Fatalf("error due to: %v", err)
 	}

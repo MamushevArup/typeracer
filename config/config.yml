@@ -6,7 +6,7 @@ http_server:
   header_timeout: 5s
 postgres:
   port: 5432
-  host: localhost
+  host: db2
   database: typeracer
   user: postgres
 multiple:

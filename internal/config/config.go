@@ -22,11 +22,12 @@ type HttpServer struct {
 	HeaderTimeout string `yaml:"header_timeout"`
 }
 type Postgres struct {
-	Port     string `yaml:"port"`
-	Host     string `yaml:"host"`
-	Database string `yaml:"database"`
-	User     string `yaml:"user"`
+	Port     string `env:"POSTGRES_PORT"`
+	Host     string `env:"POSTGRES_HOST"`
+	Database string `env:"POSTGRES_DB"`
+	User     string `env:"POSTGRES_USER"`
 	Password string `env:"POSTGRES_PASSWORD"`
+	PgUrl    string `env:"PG_URL"`
 }
 
 type Multiple struct {

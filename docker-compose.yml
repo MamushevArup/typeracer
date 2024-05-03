@@ -5,25 +5,20 @@ services:
     container_name: racer
     build:
       context: .
-      dockerfile: dockerfile/Dockerfile
+      dockerfile: ./Dockerfile
     ports:
       - "1000:1000"
-    environment:
-      - JWT_SECRET_KEY=swift_is_shit
-      - POSTGRES_PASSWORD=Cicada_3301
     networks:
       - blur
-    restart: unless-stopped
+    restart: on-failure
 
   db2:
     image: postgres
     container_name: db2
     ports:
-      - "5439:5432"
-    environment:
-      - POSTGRES_PASSWORD='Cicada_3301'
-      - POSTGRES_DB=typeracer
-      - POSTGRES_USER=qwerty
+      - "5432:5432"
+    env_file:
+      - .env
     networks:
       - blur
     volumes:
