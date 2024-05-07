@@ -21,11 +21,15 @@ func (a *auth) UpdateAdmin(ctx context.Context, username, refresh string) error 
 		a.lg.Errorf("can't build query for admin, err=%v", err)
 		return fmt.Errorf("fail build query err=%w", err)
 	}
-
-	_, err = a.db.Exec(ctx, sql, args...)
+	row, err := a.db.Exec(ctx, sql, args...)
 	if err != nil {
 		a.lg.Errorf("error with insert to the admin database err=%v", err)
 		return fmt.Errorf("fail insert to the admin database err=%w", err)
+	}
+
+	if row.RowsAffected() == 0 {
+		a.lg.Errorf("can't update admin, id=%v, err=%v", 1, err)
+		return fmt.Errorf("fail to update admin %w", err)
 	}
 
 	return nil

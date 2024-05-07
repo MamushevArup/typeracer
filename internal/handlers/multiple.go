@@ -51,7 +51,7 @@ func (h *handler) createLink(c *gin.Context) {
 		return
 	}
 
-	c.Set("text_len", len(text))
+	textLen = len(text)
 
 	linkResult := models.LinkCreation{
 		Link:    link,
@@ -65,6 +65,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+var textLen int
 
 // @Summary		Join a racetrack
 // @Tags			multiple
@@ -76,7 +77,7 @@ var upgrader = websocket.Upgrader{
 // @Success		200		{object}	models.RacerM
 // @Failure		400		{object}	errorResponse
 // @Failure		500		{object}	errorResponse
-// @Security		ApiKeyAuth
+// @Security		Bearer
 // @Router			/track/race/{link} [get]
 func (h *handler) raceTrack(c *gin.Context) {
 
@@ -141,7 +142,7 @@ func (h *handler) raceTrack(c *gin.Context) {
 					errorCh <- fmt.Errorf("error during parse body try again %w", err)
 				}
 
-				currWpm, err := h.service.Multiple.CurrentSpeed(&racerSpeed, c.GetInt("text_len"))
+				currWpm, err := h.service.Multiple.CurrentSpeed(&racerSpeed, textLen)
 				if err != nil {
 					errorCh <- fmt.Errorf("fail to calculate current speed for user %v, err=%w", racerSpeed.Email, err)
 				} else {
@@ -163,17 +164,6 @@ func (h *handler) raceTrack(c *gin.Context) {
 				} else {
 					endRaceResult <- raceResult
 				}
-				func(conn *websocket.Conn) {
-					defer func(conn *websocket.Conn) {
-						err = conn.Close()
-						if err != nil {
-							log.Printf("error closing connection %v", err)
-						}
-					}(conn)
-					defer close(endRaceResult)
-					defer close(currSpeedCh)
-					defer close(errorCh)
-				}(conn)
 			default:
 				log.Println("Invalid type value")
 				errorCh <- fmt.Errorf("invalid type value %v user=%v", typeValue, id.(string))

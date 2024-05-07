@@ -255,6 +255,36 @@ info:
   title: Typeracer Game clone API
   version: "2.0"
 paths:
+  /admin/add-cars:
+    post:
+      consumes:
+      - multipart/form-data
+      description: This endpoint is used to add cars by uploading a PNG image.
+      operationId: add-cars-admin
+      parameters:
+      - description: Car Image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add cars for the admin
+      tags:
+      - admin
   /admin/auth/refresh:
     post:
       consumes:
@@ -340,7 +370,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.errorResponse'
       security:
-      - ApiKeyAuth: []
+      - Bearer: []
       summary: Moderation details
       tags:
       - moderation
@@ -350,6 +380,19 @@ paths:
       - application/json
       description: This endpoint is used for see content in moderation
       operationId: moderation-all
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: offset
+        in: query
+        name: offset
+        type: string
+      - description: sort
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
@@ -368,7 +411,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.errorResponse'
       security:
-      - ApiKeyAuth: []
+      - Bearer: []
       summary: Get all text to see in pending mode
       tags:
       - moderation
@@ -398,7 +441,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.errorResponse'
       security:
-      - ApiKeyAuth: []
+      - Bearer: []
       summary: Approve provided text content
       tags:
       - moderation
@@ -434,7 +477,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.errorResponse'
       security:
-      - ApiKeyAuth: []
+      - Bearer: []
       summary: Reject provided content
       tags:
       - moderation
@@ -643,6 +686,15 @@ paths:
     get:
       description: single history info
       operationId: single-history
+      parameters:
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: offset
+        in: query
+        name: offset
+        type: string
       produces:
       - application/json
       responses:
@@ -669,6 +721,12 @@ paths:
     get:
       description: single history text details
       operationId: single-history-text
+      parameters:
+      - description: single id
+        in: path
+        name: single_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -905,7 +963,7 @@ paths:
           schema:
             $ref: '#/definitions/handlers.errorResponse'
       security:
-      - ApiKeyAuth: []
+      - Bearer: []
       summary: Join a racetrack
       tags:
       - multiple

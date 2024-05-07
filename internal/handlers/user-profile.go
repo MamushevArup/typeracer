@@ -84,6 +84,8 @@ func (h *handler) updateProfile(c *gin.Context) {
 // @Description single history info
 // @ID single-history
 // @Produce json
+// @Param limit query string false "limit"
+// @Param offset query string false "offset"
 // @Security Bearer
 // @Success 200 {array} models.SingleHistoryHandler
 // @Failure 404 {object} errorResponse
@@ -110,6 +112,7 @@ func (h *handler) singleHistory(c *gin.Context) {
 // @ID single-history-text
 // @Produce json
 // @Security Bearer
+// @Param			single_id	path		string	true	"single id"
 // @Success 200 {object} models.SingleHistoryText
 // @Failure 404 {object} errorResponse
 // @Failure 500 {object} errorResponse

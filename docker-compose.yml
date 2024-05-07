@@ -7,9 +7,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - "1000:1000"
+      - "1001:1001"
     networks:
       - blur
+    depends_on:
+      db2:
+        condition: service_healthy
     restart: on-failure
 
   db2:

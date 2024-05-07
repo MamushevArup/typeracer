@@ -21,15 +21,17 @@ type awsService struct {
 }
 
 const (
-	filePreSignDuration = time.Hour * 24
+	filePreSignDuration = time.Hour * 100
 )
 
 func New(cfg *config.Config) (CloudService, error) {
 
 	// create a new session of aws
 	newSession, err := session.NewSession(&aws.Config{
-		Region:      &cfg.AWS.Region,
-		Credentials: credentials.NewStaticCredentials(cfg.AWS.AccessKeyID, cfg.AWS.SecretAccessKey, ""),
+		Region:           &cfg.AWS.Region,
+		Credentials:      credentials.NewStaticCredentials(cfg.AWS.AccessKeyID, cfg.AWS.SecretAccessKey, ""),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
 	})
 
 	if err != nil {

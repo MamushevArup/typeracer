@@ -12,11 +12,14 @@ import (
 // @ID				moderation-all
 // @Accept			json
 // @Produce		json
+// @Param 			limit query string false "limit"
+// @Param 			offset query string false "offset"
+// @Param 			sort query string false "sort"
 // @Success		201				{object}	[]models.ModerationServiceResponse
 // @Failure		400				{object}	errorResponse
 // @Failure		500				{object}	errorResponse
 //
-//	@Security		ApiKeyAuth
+//	@Security		Bearer
 //
 // @Router			/admin/moderation/all [get]
 func (h *handler) showContentToModerate(c *gin.Context) {
@@ -44,7 +47,7 @@ func (h *handler) showContentToModerate(c *gin.Context) {
 // @Success 200 {object} models.ModerationTextDetails
 // @Failure 400 {object} errorResponse
 // @Failure 500 {object} errorResponse
-// @Security ApiKeyAuth
+// @Security Bearer
 // @Router /admin/moderation/{moderation_id} [get]
 func (h *handler) moderationText(c *gin.Context) {
 	modId := c.Param("moderation_id")
@@ -68,7 +71,7 @@ func (h *handler) moderationText(c *gin.Context) {
 // @Success 200
 // @Failure 400 {object} errorResponse
 // @Failure 500 {object} errorResponse
-// @Security ApiKeyAuth
+// @Security Bearer
 // @Router /admin/moderation/content/{moderation_id}/approve [POST]
 func (h *handler) approveContent(c *gin.Context) {
 	modId := c.Param("moderation_id")
@@ -93,7 +96,7 @@ func (h *handler) approveContent(c *gin.Context) {
 // @Success 200
 // @Failure 400 {object} errorResponse
 // @Failure 500 {object} errorResponse
-// @Security ApiKeyAuth
+// @Security Bearer
 // @Router /admin/moderation/content/{moderation_id}/reject [POST]
 func (h *handler) rejectContent(c *gin.Context) {
 	modId := c.Param("moderation_id")

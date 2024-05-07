@@ -7,6 +7,18 @@ import (
 
 const maxMemory = 2 << 20 // 2 MB
 
+// @Summary Add cars for the admin
+// @Tags admin
+// @Description This endpoint is used to add cars by uploading a PNG image.
+// @ID add-cars-admin
+// @Accept mpfd
+// @Produce json
+// @Param image formData file true "Car Image"
+// @Success 201
+// @Failure 400 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Security ApiKeyAuth
+// @Router /admin/add-cars [post]
 func (h *handler) addCars(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(maxMemory)
 	if err != nil {
